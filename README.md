@@ -50,11 +50,7 @@ import { Rectflow } from 'rectflow'
 ### HTML
 
 ```html
-<div class="main">
-    <div class="toolbar"></div>
-    <div class="drawingbar"></div>
-    <div class="chart"></div>
-</div>
+<div class="main"></div>
 ```
 
 ### JavaScript
@@ -62,16 +58,19 @@ import { Rectflow } from 'rectflow'
 ```ts
 const mainElem = document.querySelector('.main')
 
-const rectflow = new Rectflow(mainElem, {
-    rows: '50px auto',
-    columns: '50px auto',
-    gap: 10,
-    areas: [['tool tool'], ['drawing chart']],
+const rectflow = new Rectflow({
+    container: mainElem,
+    layout: {
+        rows: '50px auto 50px',
+        columns: '50px auto 100px',
+        gap: 5,
+        areas: [
+            ['tool tool tool'], 
+            ['drawing chart widget'], 
+            ['drawing base widget']
+        ],
+    },
 })
-
-rectflow.registerArea('tool', document.querySelector('.toolbar'))
-rectflow.registerArea('drawing', document.querySelector('.drawingbar'))
-rectflow.registerArea('chart', document.querySelector('.chart'))
 
 rectflow.layout()
 ```
@@ -85,7 +84,10 @@ Rectflow supports **two area formats**:
 ### Shortcut (recommended)
 
 ```ts
-areas: [['tool tool'], ['drawing chart']]
+areas: [
+    ['tool tool'], 
+    ['drawing chart']
+]
 ```
 
 ### Expanded form
@@ -114,18 +116,6 @@ This makes rapid prototyping easy.
 
 ---
 
-## 📐 Validation Rules
-
-Rectflow validates layouts and throws errors if:
-
--   An area is **not rectangular**
--   Areas overlap incorrectly
--   Area rows have mismatched column counts
-
-This prevents silent layout bugs.
-
----
-
 ## 🔁 Resize Handling
 
 Rectflow listens to container resize events and automatically recalculates layout:
@@ -139,16 +129,19 @@ No manual resize handling required.
 
 ## ⚙️ API Reference
 
-### `new Rectflow(container, options)`
+### `new Rectflow(config)`
 
-#### Options
+#### config
 
 ```ts
 {
-  rows: string
-  columns: string
-  gap?: number
-  areas: string[][]
+    container: HTMLElement
+    layout: {
+        rows: string
+        columns: string
+        gap?: number
+        areas: string[][]
+    }
 }
 ```
 
@@ -174,33 +167,6 @@ rectflow.layout()
 
 ---
 
-## 🧱 Internal Architecture
-
-Rectflow is intentionally modular:
-
--   **LayoutEngine** → Pure math (no DOM)
--   **AreaRegistry** → Tracks registered & missing areas
--   **AreaRenderer** → DOM creation & styling
--   **Rectflow (Public API)** → Orchestrates everything
-
-This makes the engine:
-
--   Testable
--   Extendable
--   Future-proof
-
----
-
-## 🛣 Roadmap
-
--   Percentage (`%`) track support
--   Min / Max constraints
--   Nested Rectflow containers
--   Debug overlay grid
--   Drag-resizable areas
-
----
-
 ## 📄 License
 
 MIT
@@ -214,6 +180,7 @@ Inspired by:
 -   CSS Grid
 -   Game UI layout systems
 -   Charting & trading platforms
+-   Dashboards
 
 ---
 
