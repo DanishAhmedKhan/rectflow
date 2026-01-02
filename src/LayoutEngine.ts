@@ -27,13 +27,17 @@ export class LayoutEngine {
                         height: rows[r],
                     }
                 } else {
-                    result[name].width += cols[c] + gap
-                    result[name].height += rows[r] + gap
+                    const rect = result[name]
+                    if (colOffsets[c] + cols[c] > rect.x + rect.width) {
+                        rect.width = colOffsets[c] + cols[c] - rect.x
+                    }
+
+                    if (rowOffsets[r] + rows[r] > rect.y + rect.height) {
+                        rect.height = rowOffsets[r] + rows[r] - rect.y
+                    }
                 }
             }
         }
-
-        console.log(result)
 
         return result
     }
@@ -44,21 +48,30 @@ export class LayoutEngine {
 
     private parseTracks(def: string, total: number): number[] {
         const parts = def.split(/\s+/)
+        const gap = this.config.gap ?? 0
+
         let fixed = 0
-        let fr = 0
+        let frUnits = 0
 
         for (const p of parts) {
-            if (p.endsWith('px')) fixed += parseFloat(p)
-            else if (p.endsWith('fr')) fr += parseFloat(p)
+            if (p.endsWith('px')) {
+                fixed += parseFloat(p)
+            } else if (p.endsWith('fr')) {
+                frUnits += parseFloat(p)
+            } else if (p === 'auto') {
+                frUnits += 1
+            }
         }
 
-        const remaining = total - fixed - (parts.length - 1) * (this.config.gap ?? 0)
-        const frUnit = fr ? remaining / fr : 0
+        const remaining = total - fixed - (parts.length - 1) * gap
+
+        const frUnit = frUnits > 0 ? remaining / frUnits : 0
 
         return parts.map((p) => {
             if (p.endsWith('px')) return parseFloat(p)
             if (p.endsWith('fr')) return parseFloat(p) * frUnit
-            return frUnit
+            if (p === 'auto') return frUnit
+            return 0
         })
     }
 
