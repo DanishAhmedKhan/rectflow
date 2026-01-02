@@ -42,10 +42,10 @@ export class AreaRenderer {
         const layout = this.engine.compute(rect)
 
         for (const name in layout) {
-            const el = this.ensureArea(name)
+            const elem = this.ensureArea(name)
             const r = layout[name]
 
-            Object.assign(el.style, {
+            Object.assign(elem.style, {
                 left: `${r.x}px`,
                 top: `${r.y}px`,
                 width: `${r.width}px`,
@@ -55,11 +55,17 @@ export class AreaRenderer {
     }
 
     private ensureArea(name: string): HTMLElement {
+        function randomColor(): string {
+            const hue = Math.floor(Math.random() * 360)
+            return `hsl(${hue}, 70%, 70%)`
+        }
+
         const existing = this.areas.get(name)
         if (existing) return existing.elem
 
         const elem = document.createElement('div')
         elem.dataset.rectflowArea = name
+        elem.style.background = randomColor()
         elem.style.position = 'absolute'
 
         this.config.container.appendChild(elem)

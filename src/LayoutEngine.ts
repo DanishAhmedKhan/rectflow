@@ -1,4 +1,4 @@
-import type { GridConfig, Rect, ComputedLayout } from './Grid'
+import type { Rect, ComputedLayout, GridConfig } from './Grid'
 
 export class LayoutEngine {
     constructor(private config: GridConfig) {}

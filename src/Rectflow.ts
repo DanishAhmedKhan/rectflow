@@ -1,9 +1,9 @@
 import { AreaRenderer } from './AreaRenderer'
-import type { GridLayout } from './Grid'
+import type { GridConfig } from './Grid'
 
 export type RectflowConfig = {
     container: HTMLElement
-    layout: GridLayout
+    layout: GridConfig
 }
 
 export class Rectflow {

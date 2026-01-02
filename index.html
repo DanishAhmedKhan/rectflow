@@ -17,37 +17,11 @@
             width: 100vw;
             height: 100vh;
         }
-
-        .toolbar {
-            background-color: red;
-        }
-
-        .drawingbar {
-            background-color: blue;
-        }
-
-        .chart {
-            background-color: yellow;
-        }
-
-        .widget {
-            background-color: green;
-        }
-
-        .base {
-            background-color: coral;
-        }
     </style>
 </head>
 
 <body>
-    <div class="main">
-        <div class="toolbar"></div>
-        <div class="drawingbar"></div>
-        <div class="chart"></div>
-        <div class="widget"></div>
-        <div class="base"></div>
-    </div>
+    <div class="main"></div>
 
     <script type="module" src="/src/RectFlow.ts"></script>
     <script type="module">
@@ -61,7 +35,7 @@
             layout: {
                 rows: '50px auto 50px',
                 columns: '50px auto 100px',
-                gap: 10,
+                gap: 5,
                 areas: [
                     ['tool tool tool'],
                     ['drawing chart widget'],
@@ -70,11 +44,6 @@
             }
         })
 
-        rectflow.registerArea('tool', document.querySelector('.toolbar'))
-        rectflow.registerArea('drawing', document.querySelector('.drawingbar'))
-        rectflow.registerArea('chart', document.querySelector('.chart'))
-        rectflow.registerArea('widget', document.querySelector('.widget'))
-        rectflow.registerArea('base', document.querySelector('.base'))
         rectflow.layout()
     </script>
 </body>
