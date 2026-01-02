@@ -1,0 +1,35 @@
+{
+    "name": "rectflow",
+    "version": "0.1.0",
+    "type": "module",
+    "description": "Absolute-position layout engine with grid-like DSL",
+    "main": "./dist/rectflow.cjs.js",
+    "module": "./dist/rectflow.es.js",
+    "unpkg": "./dist/rectflow.umd.js",
+    "jsdelivr": "./dist/rectflow.umd.js",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview"
+    },
+    "keywords": [
+        "layout",
+        "grid",
+        "dashboard",
+        "absolute-layout",
+        "ui-engine",
+        "dock",
+        "panel"
+    ],
+    "author": "Danish Ahmed Khan",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/node": "^25.0.3",
+        "typescript": "~5.9.3",
+        "vite": "^7.2.4"
+    }
+}

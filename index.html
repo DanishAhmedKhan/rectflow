@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rectflow</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        .main {
+            background-color: grey;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .toolbar {
+            background-color: red;
+        }
+
+        .drawingbar {
+            background-color: blue;
+        }
+
+        .chart {
+            background-color: yellow;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <div class="toolbar"></div>
+        <div class="drawingbar"></div>
+        <div class="chart"></div>
+    </div>
+
+    <script type="module" src="/src/RectFlow.ts"></script>
+    <script type="module">
+
+        import { Rectflow } from './src/Rectflow'
+
+        const mainElem = document.querySelector('.main')
+
+        const rectflow = new Rectflow(mainElem, {
+            rows: '50px auto',
+            columns: '50px auto',
+            gap: 10,
+            areas: [
+                ['tool tool'],
+                ['drawing chart'],
+            ]
+        })
+
+        rectflow.registerArea('tool', document.querySelector('.toolbar'))
+        rectflow.registerArea('drawing', document.querySelector('.drawingbar'))
+        rectflow.registerArea('chart', document.querySelector('.chart'))
+        rectflow.layout()
+    </script>
+</body>
+
+</html>
