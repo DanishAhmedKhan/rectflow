@@ -1,42 +1,35 @@
-import type { GridConfig, Rect } from './Grid'
-import { LayoutEngine } from './LayoutEngine'
+import { AreaRenderer } from './AreaRenderer'
+import type { GridLayout } from './Grid'
+
+export type RectflowConfig = {
+    container: HTMLElement
+    layout: GridLayout
+}
 
 export class Rectflow {
-    private container: HTMLElement
-    private areas = new Map<string, HTMLElement>()
+    private areaRenderer: AreaRenderer
 
-    private engine: LayoutEngine
+    private observer: ResizeObserver
 
-    constructor(container: HTMLElement, config: GridConfig) {
-        this.container = container
-        this.engine = new LayoutEngine(config)
+    constructor(config: RectflowConfig) {
+        config.container.style.position = 'relative'
 
-        this.container.style.position = 'relative'
+        this.areaRenderer = new AreaRenderer(config)
+
+        this.observer = new ResizeObserver(() => this.layout())
+        this.observer.observe(config.container)
     }
 
     public registerArea(area: string, elem: HTMLElement) {
-        elem.style.position = 'absolute'
-        this.areas.set(area, elem)
+        this.areaRenderer.registerArea(area, elem)
     }
 
     public layout() {
-        const rect: Rect = {
-            x: 0,
-            y: 0,
-            width: this.container.clientWidth,
-            height: this.container.clientHeight,
-        }
+        this.areaRenderer.layout()
+    }
 
-        const computed = this.engine.compute(rect)
-
-        for (const [name, el] of this.areas) {
-            const r = computed[name]
-            if (!r) continue
-
-            el.style.left = `${r.x}px`
-            el.style.top = `${r.y}px`
-            el.style.width = `${r.width}px`
-            el.style.height = `${r.height}px`
-        }
+    public destroy() {
+        this.observer.disconnect()
+        this.areaRenderer.clearArea()
     }
 }

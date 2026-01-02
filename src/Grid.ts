@@ -4,7 +4,7 @@ export type TrackSize = number | `${number}px` | `${number}fr` | 'auto'
 
 export type GridAreas = string[][]
 
-export interface GridConfig {
+export interface GridLayout {
     rows: string
     columns: string
     gap?: number

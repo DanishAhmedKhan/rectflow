@@ -56,15 +56,18 @@
 
         const mainElem = document.querySelector('.main')
 
-        const rectflow = new Rectflow(mainElem, {
-            rows: '50px auto 50px',
-            columns: '50px auto 100px',
-            gap: 10,
-            areas: [
-                ['tool tool tool'],
-                ['drawing chart widget'],
-                ['drawing base widget']
-            ]
+        const rectflow = new Rectflow({
+            container: mainElem,
+            layout: {
+                rows: '50px auto 50px',
+                columns: '50px auto 100px',
+                gap: 10,
+                areas: [
+                    ['tool tool tool'],
+                    ['drawing chart widget'],
+                    ['drawing base widget']
+                ]
+            }
         })
 
         rectflow.registerArea('tool', document.querySelector('.toolbar'))
