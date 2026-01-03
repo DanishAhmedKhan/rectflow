@@ -1,11 +1,11 @@
 import { AreaRenderer } from './AreaRenderer'
-import { RectflowError } from './error/RectflowError'
-import type { GridConfig } from './Grid'
-import { assertContainer } from './helper/assertContainer'
-import { assertGridConfig } from './helper/assertGridConfig'
+import { RectflowError } from '../error/RectflowError'
+import type { GridConfig } from '../types/Grid'
+import { assertContainer } from '../helper/assertContainer'
+import { assertGridConfig } from '../helper/assertGridConfig'
 import { LayoutEngine } from './LayoutEngine'
-import type { RectflowOptions } from './RectflowOptions'
-import type { Resolved } from './types/Resolved'
+import type { RectflowOptions } from '../types/RectflowOptions'
+import type { Resolved } from '../types/Resolved'
 
 export class Rectflow {
     private readonly options: Resolved<RectflowOptions>

@@ -1,1 +1,1 @@
-export * from './Rectflow'
+export * from './core/Rectflow'

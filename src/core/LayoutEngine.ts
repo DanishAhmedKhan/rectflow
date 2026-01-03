@@ -1,4 +1,4 @@
-import type { Rect, ComputedLayout, GridConfig } from './Grid'
+import type { Rect, ComputedLayout, GridConfig } from '../types/Grid'
 
 export class LayoutEngine {
     public static calculate(layout: GridConfig, container: Rect): ComputedLayout {

@@ -1,6 +1,6 @@
 import { RectflowError } from '../error/RectflowError'
 import { ErrorCode } from '../error/ErrorCode'
-import type { GridConfig } from '../Grid'
+import type { GridConfig } from '../types/Grid'
 
 export function assertGridConfig(config: GridConfig): void {
     if (!config) {

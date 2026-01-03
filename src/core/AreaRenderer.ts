@@ -1,7 +1,7 @@
-import type { RectflowOptions } from './RectflowOptions'
-import type { Resolved } from './types/Resolved'
-import type { ComputedLayout, Rect } from './Grid'
-import { randomColor } from './helper/randomColor'
+import type { RectflowOptions } from '../types/RectflowOptions'
+import type { Resolved } from '../types/Resolved'
+import type { ComputedLayout, Rect } from '../types/Grid'
+import { randomColor } from '../helper/randomColor'
 
 type AreaEntry = {
     elem: HTMLElement
