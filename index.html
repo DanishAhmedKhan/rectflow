@@ -49,7 +49,21 @@
             }
         })
 
-        rectflow.registerArea('head', document.querySelector('.head'))
+        // rectflow.registerArea('head', document.querySelector('.head'))
+
+        const contentElem = rectflow.getArea('content')
+        contentElem.innerHTML = 'Danish'
+
+        rectflow.setLayout({
+            rows: '50px auto 50px',
+            columns: '50px auto 100px',
+            gap: 5,
+            areas: [
+                ['menu menu menu'],
+                ['head head head'],
+                ['bottom content widget'],
+            ]
+        })
     </script>
 </body>
 

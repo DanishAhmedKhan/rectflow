@@ -1,17 +1,16 @@
 import type { Rect, ComputedLayout, GridConfig } from './Grid'
 
 export class LayoutEngine {
-    constructor(private config: GridConfig) {}
+    public calculate(layout: GridConfig, container: Rect): ComputedLayout {
+        const gap = layout.gap ?? 0
 
-    compute(container: Rect): ComputedLayout {
-        const rows = this.parseTracks(this.config.rows, container.height)
-        const cols = this.parseTracks(this.config.columns, container.width)
-        const gap = this.config.gap ?? 0
+        const rows = this.parseTracks(layout.rows, container.height, gap)
+        const cols = this.parseTracks(layout.columns, container.width, gap)
 
         const rowOffsets = this.accumulate(rows, gap)
         const colOffsets = this.accumulate(cols, gap)
 
-        const areas = this.normalizeAreas(this.config.areas)
+        const areas = this.normalizeAreas(layout.areas)
         const result: ComputedLayout = {}
 
         for (let r = 0; r < areas.length; r++) {
@@ -46,9 +45,8 @@ export class LayoutEngine {
         return areas.map((row) => (row.length === 1 ? row[0].trim().split(/\s+/) : row))
     }
 
-    private parseTracks(def: string, total: number): number[] {
+    private parseTracks(def: string, total: number, gap: number): number[] {
         const parts = def.split(/\s+/)
-        const gap = this.config.gap ?? 0
 
         let fixed = 0
         let frUnits = 0

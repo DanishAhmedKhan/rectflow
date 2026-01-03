@@ -14,7 +14,7 @@ export class AreaRenderer {
     private engine: LayoutEngine
 
     constructor(private readonly options: Resolved<RectflowOptions>) {
-        this.engine = new LayoutEngine(options.layout)
+        this.engine = new LayoutEngine()
     }
 
     public registerArea(name: string, elem: HTMLElement) {
@@ -40,7 +40,7 @@ export class AreaRenderer {
             height: this.options.container.clientHeight,
         }
 
-        const layout = this.engine.compute(rect)
+        const layout = this.engine.calculate(this.options.layout, rect)
 
         for (const name in layout) {
             const elem = this.ensureArea(name)
@@ -54,6 +54,8 @@ export class AreaRenderer {
             })
         }
     }
+
+    public updateLayout() {}
 
     private ensureArea(name: string): HTMLElement {
         function randomColor(): string {
@@ -71,9 +73,14 @@ export class AreaRenderer {
 
         this.options.container.appendChild(elem)
 
+        console.log(name)
         this.areas.set(name, { elem, auto: true })
 
         return elem
+    }
+
+    public getArea(area: string) {
+        return this.areas.get(area)?.elem
     }
 
     public clearArea() {
