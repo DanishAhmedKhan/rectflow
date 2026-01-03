@@ -1,21 +1,18 @@
-import { LayoutEngine } from './LayoutEngine'
 import type { RectflowOptions } from './RectflowOptions'
 import type { Resolved } from './types/Resolved'
-import type { Rect } from './Grid'
+import type { ComputedLayout, Rect } from './Grid'
+import { randomColor } from './helper/randomColor'
 
 type AreaEntry = {
     elem: HTMLElement
     auto: boolean
+    active: boolean
 }
 
 export class AreaRenderer {
     private areas = new Map<string, AreaEntry>()
 
-    private engine: LayoutEngine
-
-    constructor(private readonly options: Resolved<RectflowOptions>) {
-        this.engine = new LayoutEngine()
-    }
+    constructor(private readonly options: Resolved<RectflowOptions>) {}
 
     public registerArea(name: string, elem: HTMLElement) {
         const existing = this.areas.get(name)
@@ -29,61 +26,71 @@ export class AreaRenderer {
         this.areas.set(name, {
             elem,
             auto: false,
+            active: true,
         })
-    }
-
-    public layout() {
-        const rect: Rect = {
-            x: 0,
-            y: 0,
-            width: this.options.container.clientWidth,
-            height: this.options.container.clientHeight,
-        }
-
-        const layout = this.engine.calculate(this.options.layout, rect)
-
-        for (const name in layout) {
-            const elem = this.ensureArea(name)
-            const r = layout[name]
-
-            Object.assign(elem.style, {
-                left: `${r.x}px`,
-                top: `${r.y}px`,
-                width: `${r.width}px`,
-                height: `${r.height}px`,
-            })
-        }
-    }
-
-    public updateLayout() {}
-
-    private ensureArea(name: string): HTMLElement {
-        function randomColor(): string {
-            const hue = Math.floor(Math.random() * 360)
-            return `hsl(${hue}, 70%, 70%)`
-        }
-
-        const existing = this.areas.get(name)
-        if (existing) return existing.elem
-
-        const elem = document.createElement('div')
-        elem.dataset.rectflowArea = name
-        elem.style.background = randomColor()
-        elem.style.position = 'absolute'
 
         this.options.container.appendChild(elem)
+    }
 
-        console.log(name)
-        this.areas.set(name, { elem, auto: true })
+    public applyRects(layout: ComputedLayout) {
+        const activeAreas = new Set(Object.keys(layout))
 
-        return elem
+        for (const [name, entry] of this.areas) {
+            if (!activeAreas.has(name)) {
+                if (entry.auto && entry.active) {
+                    entry.elem.remove()
+                    entry.active = false
+                }
+            }
+        }
+
+        for (const name in layout) {
+            const rect = layout[name]
+            const entry = this.ensureArea(name)
+
+            if (!entry.active) {
+                this.options.container.appendChild(entry.elem)
+                entry.active = true
+            }
+
+            this.applyRectStyles(entry.elem, rect)
+        }
     }
 
     public getArea(area: string) {
         return this.areas.get(area)?.elem
     }
 
-    public clearArea() {
+    public clear() {
+        for (const { elem } of this.areas.values()) {
+            elem.remove()
+        }
         this.areas.clear()
+    }
+
+    private ensureArea(name: string): AreaEntry {
+        const existing = this.areas.get(name)
+        if (existing) return existing
+
+        const elem = document.createElement('div')
+        elem.dataset.rectflowArea = name
+        elem.style.position = 'absolute'
+        elem.style.background = randomColor()
+
+        const entry: AreaEntry = {
+            elem,
+            auto: true,
+            active: false,
+        }
+
+        this.areas.set(name, entry)
+        return entry
+    }
+
+    private applyRectStyles(elem: HTMLElement, rect: Rect) {
+        elem.style.left = rect.x + 'px'
+        elem.style.top = rect.y + 'px'
+        elem.style.width = rect.width + 'px'
+        elem.style.height = rect.height + 'px'
     }
 }

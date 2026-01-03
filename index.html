@@ -25,7 +25,7 @@
 
 <body>
     <div class="main">
-        <div class="head"></div>
+        <div class="head">HEAD</div>
     </div>
 
     <script type="module" src="/src/RectFlow.ts"></script>
@@ -49,21 +49,39 @@
             }
         })
 
-        // rectflow.registerArea('head', document.querySelector('.head'))
+        rectflow.registerArea('head', document.querySelector('.head'))
 
         const contentElem = rectflow.getArea('content')
         contentElem.innerHTML = 'Danish'
 
-        rectflow.setLayout({
-            rows: '50px auto 50px',
-            columns: '50px auto 100px',
-            gap: 5,
-            areas: [
-                ['menu menu menu'],
-                ['head head head'],
-                ['bottom content widget'],
-            ]
-        })
+        const widgetElem = rectflow.getArea('widget')
+        widgetElem.innerHTML = 'Widget'
+
+        setTimeout(() => {
+            rectflow.setLayout({
+                rows: '50px 50px auto',
+                columns: '50px auto 200px',
+                gap: 5,
+                areas: [
+                    ['menu menu menu'],
+                    ['head head head'],
+                    ['bottom content box'],
+                ]
+            })
+        }, 1000)
+
+        setTimeout(() => {
+            rectflow.setLayout({
+                rows: '50px 50px auto',
+                columns: '50px auto 200px',
+                gap: 5,
+                areas: [
+                    ['menu menu menu'],
+                    ['head head head'],
+                    ['bottom content widget'],
+                ]
+            })
+        }, 2000)
     </script>
 </body>
 

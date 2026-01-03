@@ -1,7 +1,7 @@
 import type { Rect, ComputedLayout, GridConfig } from './Grid'
 
 export class LayoutEngine {
-    public calculate(layout: GridConfig, container: Rect): ComputedLayout {
+    public static calculate(layout: GridConfig, container: Rect): ComputedLayout {
         const gap = layout.gap ?? 0
 
         const rows = this.parseTracks(layout.rows, container.height, gap)
@@ -41,11 +41,11 @@ export class LayoutEngine {
         return result
     }
 
-    private normalizeAreas(areas: string[][]): string[][] {
+    private static normalizeAreas(areas: string[][]): string[][] {
         return areas.map((row) => (row.length === 1 ? row[0].trim().split(/\s+/) : row))
     }
 
-    private parseTracks(def: string, total: number, gap: number): number[] {
+    private static parseTracks(def: string, total: number, gap: number): number[] {
         const parts = def.split(/\s+/)
 
         let fixed = 0
@@ -73,7 +73,7 @@ export class LayoutEngine {
         })
     }
 
-    private accumulate(sizes: number[], gap: number): number[] {
+    private static accumulate(sizes: number[], gap: number): number[] {
         const offsets: number[] = []
         let current = 0
         for (const s of sizes) {

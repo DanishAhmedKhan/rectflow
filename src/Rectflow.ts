@@ -3,6 +3,7 @@ import { RectflowError } from './error/RectflowError'
 import type { GridConfig } from './Grid'
 import { assertContainer } from './helper/assertContainer'
 import { assertGridConfig } from './helper/assertGridConfig'
+import { LayoutEngine } from './LayoutEngine'
 import type { RectflowOptions } from './RectflowOptions'
 import type { Resolved } from './types/Resolved'
 
@@ -30,7 +31,7 @@ export class Rectflow {
     private init() {
         try {
             this.areaRenderer = new AreaRenderer(this.options)
-            this.areaRenderer.layout()
+            this.layout()
 
             this.observer = new ResizeObserver(() => this.layout())
             this.observer.observe(this.options.container!)
@@ -51,7 +52,8 @@ export class Rectflow {
 
     public setLayout(layout: GridConfig) {
         assertGridConfig(layout)
-        this.areaRenderer.updateLayout()
+        this.options.layout = layout
+        this.layout()
     }
 
     public getArea(area: string) {
@@ -59,11 +61,18 @@ export class Rectflow {
     }
 
     public layout() {
-        this.areaRenderer.layout()
+        const rects = LayoutEngine.calculate(this.options.layout, {
+            x: 0,
+            y: 0,
+            width: this.options.container.clientWidth,
+            height: this.options.container.clientHeight,
+        })
+
+        this.areaRenderer.applyRects(rects)
     }
 
     public destroy() {
         this.observer.disconnect()
-        this.areaRenderer.clearArea()
+        this.areaRenderer.clear()
     }
 }
