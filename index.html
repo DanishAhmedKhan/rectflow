@@ -13,15 +13,20 @@
         }
 
         .main {
-            background-color: grey;
             width: 100vw;
             height: 100vh;
+        }
+
+        .head {
+            background-color: blueviolet;
         }
     </style>
 </head>
 
 <body>
-    <div class="main"></div>
+    <div class="main">
+        <div class="head"></div>
+    </div>
 
     <script type="module" src="/src/RectFlow.ts"></script>
     <script type="module">
@@ -37,14 +42,14 @@
                 columns: '50px auto 100px',
                 gap: 5,
                 areas: [
-                    ['tool tool tool'],
-                    ['drawing chart widget'],
-                    ['drawing base widget']
+                    ['head head head'],
+                    ['menu content widget'],
+                    ['menu bottom widget']
                 ]
             }
         })
 
-        rectflow.layout()
+        rectflow.registerArea('head', document.querySelector('.head'))
     </script>
 </body>
 

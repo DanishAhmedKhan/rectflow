@@ -1,6 +1,6 @@
 {
     "name": "rectflow",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "type": "module",
     "description": "Absolute-position layout engine with grid-like DSL",
     "main": "./dist/rectflow.cjs.js",
@@ -26,6 +26,14 @@
         "panel"
     ],
     "author": "Danish Ahmed Khan",
+    "homepage": "https://github.com/DanishAhmedKhan/rectflow",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DanishAhmedKhan/rectflow"
+    },
+    "bugs": {
+        "url": "https://github.com/DanishAhmedKhan/rectflow/issues"
+    },
     "license": "MIT",
     "devDependencies": {
         "@types/node": "^25.0.3",

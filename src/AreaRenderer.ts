@@ -1,5 +1,6 @@
 import { LayoutEngine } from './LayoutEngine'
-import type { RectflowConfig } from './Rectflow'
+import type { RectflowOptions } from './RectflowOptions'
+import type { Resolved } from './types/Resolved'
 import type { Rect } from './Grid'
 
 type AreaEntry = {
@@ -12,8 +13,8 @@ export class AreaRenderer {
 
     private engine: LayoutEngine
 
-    constructor(private readonly config: RectflowConfig) {
-        this.engine = new LayoutEngine(config.layout)
+    constructor(private readonly options: Resolved<RectflowOptions>) {
+        this.engine = new LayoutEngine(options.layout)
     }
 
     public registerArea(name: string, elem: HTMLElement) {
@@ -35,8 +36,8 @@ export class AreaRenderer {
         const rect: Rect = {
             x: 0,
             y: 0,
-            width: this.config.container.clientWidth,
-            height: this.config.container.clientHeight,
+            width: this.options.container.clientWidth,
+            height: this.options.container.clientHeight,
         }
 
         const layout = this.engine.compute(rect)
@@ -68,7 +69,7 @@ export class AreaRenderer {
         elem.style.background = randomColor()
         elem.style.position = 'absolute'
 
-        this.config.container.appendChild(elem)
+        this.options.container.appendChild(elem)
 
         this.areas.set(name, { elem, auto: true })
 

@@ -1,23 +1,46 @@
 import { AreaRenderer } from './AreaRenderer'
-import type { GridConfig } from './Grid'
-
-export type RectflowConfig = {
-    container: HTMLElement
-    layout: GridConfig
-}
+import { RectflowError } from './error/RectflowError'
+import { assertContainer } from './helper/assertContainer'
+import { assertGridConfig } from './helper/assertGridConfig'
+import type { RectflowOptions } from './RectflowOptions'
+import type { Resolved } from './types/Resolved'
 
 export class Rectflow {
-    private areaRenderer: AreaRenderer
+    private readonly options: Resolved<RectflowOptions>
 
-    private observer: ResizeObserver
+    private areaRenderer!: AreaRenderer
+    private observer!: ResizeObserver
 
-    constructor(config: RectflowConfig) {
-        config.container.style.position = 'relative'
+    constructor(options: RectflowOptions) {
+        assertContainer(options.container)
+        assertGridConfig(options.layout)
 
-        this.areaRenderer = new AreaRenderer(config)
+        this.options = {
+            ...options,
+            container: options.container,
+            strict: options.strict ?? true,
+        }
 
-        this.observer = new ResizeObserver(() => this.layout())
-        this.observer.observe(config.container)
+        options.container.style.position = 'relative'
+
+        this.init()
+    }
+
+    private init() {
+        try {
+            this.areaRenderer = new AreaRenderer(this.options)
+
+            this.observer = new ResizeObserver(() => this.layout())
+            this.observer.observe(this.options.container!)
+        } catch (err) {
+            if (this.options.strict) throw err
+
+            if (err instanceof RectflowError) {
+                console.error(err.message, err.code)
+            } else {
+                console.error('[Rectflow] Unknown error', err)
+            }
+        }
     }
 
     public registerArea(area: string, elem: HTMLElement) {

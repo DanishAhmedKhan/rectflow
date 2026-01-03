@@ -50,13 +50,30 @@ import { Rectflow } from 'rectflow'
 ### HTML
 
 ```html
-<div class="main"></div>
+<div class="main">
+    <div class="head"></div>
+</div>
 ```
+
+### CSS
+
+```css
+.main {
+    width: 100%;
+    height: 100vh; /* or a fixed height like 600px */
+}
+.head {
+    background-color: blueviolet;
+}
+```
+
+⚠️ Important:
+If the container does not have a defined height, Rectflow will not be able to calculate or render the layout correctly.
 
 ### JavaScript
 
 ```ts
-const mainElem = document.querySelector('.main')
+ const mainElem = document.querySelector('.main')
 
 const rectflow = new Rectflow({
     container: mainElem,
@@ -65,14 +82,14 @@ const rectflow = new Rectflow({
         columns: '50px auto 100px',
         gap: 5,
         areas: [
-            ['tool tool tool'], 
-            ['drawing chart widget'], 
-            ['drawing base widget']
-        ],
-    },
+            ['head head head'],
+            ['menu content widget'],
+            ['menu bottom widget']
+        ]
+    }
 })
 
-rectflow.layout()
+rectflow.registerArea('head', document.querySelector('.head'))
 ```
 
 ---
@@ -129,9 +146,9 @@ No manual resize handling required.
 
 ## ⚙️ API Reference
 
-### `new Rectflow(config)`
+### `new Rectflow(options)`
 
-#### config
+#### options
 
 ```ts
 {
@@ -164,6 +181,16 @@ Calculates layout and applies styles.
 ```ts
 rectflow.layout()
 ```
+
+ℹ️ Note: `layout()` is called automatically by Rectflow whenever needed (e.g. during initialization or internal updates).
+In most cases, you do not need to call this method manually.
+
+**When should you call it?**
+
+You should only call `layout()` if:
+-   You perform manual DOM manipulations outside of Rectflow
+-   You change container dimensions programmatically
+-   You update layout-related styles or measurements via custom JavaScript
 
 ---
 
