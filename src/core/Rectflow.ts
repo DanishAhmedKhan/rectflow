@@ -1,10 +1,10 @@
 import { AreaRenderer } from './AreaRenderer'
-import { RectflowError } from '../error/RectflowError'
-import type { GridConfig } from '../types/Grid'
-import { assertContainer } from '../helper/assertContainer'
-import { assertGridConfig } from '../helper/assertGridConfig'
 import { LayoutEngine } from './LayoutEngine'
+import { RectflowError } from '../error/RectflowError'
+import { assertContainer } from '../helper/assertContainer'
+import { assertLayoutConfig } from '../helper/assertLayoutConfig'
 import type { RectflowOptions } from '../types/RectflowOptions'
+import type { LayoutConfig } from '../types/LayoutConfig'
 import type { Resolved } from '../types/Resolved'
 
 export class Rectflow {
@@ -15,7 +15,7 @@ export class Rectflow {
 
     constructor(options: RectflowOptions) {
         assertContainer(options.container)
-        assertGridConfig(options.layout)
+        assertLayoutConfig(options.layout)
 
         this.options = {
             ...options,
@@ -50,8 +50,8 @@ export class Rectflow {
         this.areaRenderer.registerArea(area, elem)
     }
 
-    public setLayout(layout: GridConfig) {
-        assertGridConfig(layout)
+    public setLayout(layout: LayoutConfig) {
+        assertLayoutConfig(layout)
         this.options.layout = layout
         this.layout()
     }

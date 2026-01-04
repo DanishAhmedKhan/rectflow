@@ -1,7 +1,7 @@
-import type { Rect, ComputedLayout, GridConfig } from '../types/Grid'
+import type { Rect, ComputedLayout, LayoutConfig } from '../types/LayoutConfig'
 
 export class LayoutEngine {
-    public static calculate(layout: GridConfig, container: Rect): ComputedLayout {
+    public static calculate(layout: LayoutConfig, container: Rect): ComputedLayout {
         const gap = layout.gap ?? 0
 
         const rows = this.parseTracks(layout.rows, container.height, gap)

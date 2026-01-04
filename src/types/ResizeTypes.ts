@@ -1,8 +1,8 @@
 export type AreaName = string
+export type ResizeDirection = 'horizontal' | 'vertical'
 
 export interface ResizeHandle {
     between: [AreaName, AreaName]
-
     min?: number
     max?: number
 }
@@ -11,8 +11,6 @@ export interface ResizeConfig {
     handles: ResizeHandle[]
     gutter?: number
 }
-
-export type ResizeDirection = 'horizontal' | 'vertical'
 
 export interface ResolvedResizeHandle {
     handle: ResizeHandle

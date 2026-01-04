@@ -1,5 +1,5 @@
-import type { AreaName, GridAreas } from '../types/Grid'
-import type { ResizeHandle } from '../types/ResizeTypes'
+import type { LayoutAreas } from '../types/LayoutConfig'
+import type { AreaName, ResizeHandle } from '../types/ResizeTypes'
 
 type Cell = {
     area: AreaName
@@ -18,7 +18,7 @@ type AreaBox = {
 export class AreaTopology {
     private cells: Cell[] = []
 
-    constructor(private areas: GridAreas) {
+    constructor(private areas: LayoutAreas) {
         this.buildCells()
     }
 

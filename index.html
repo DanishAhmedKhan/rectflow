@@ -45,7 +45,15 @@
                     ['head head head'],
                     ['menu content widget'],
                     ['menu bottom widget']
-                ]
+                ],
+                resize: {
+                    handles: [
+                        {
+                            between: ['head', 'content'],
+                        },
+                    ],
+                    gutter: 6,
+                }
             }
         })
 
@@ -57,31 +65,31 @@
         const widgetElem = rectflow.getArea('widget')
         widgetElem.innerHTML = 'Widget'
 
-        setTimeout(() => {
-            rectflow.setLayout({
-                rows: '50px 50px auto',
-                columns: '50px auto 200px',
-                gap: 5,
-                areas: [
-                    ['menu menu menu'],
-                    ['head head head'],
-                    ['bottom content box'],
-                ]
-            })
-        }, 1000)
+        // setTimeout(() => {
+        //     rectflow.setLayout({
+        //         rows: '50px 50px auto',
+        //         columns: '50px auto 200px',
+        //         gap: 5,
+        //         areas: [
+        //             ['menu menu menu'],
+        //             ['head head head'],
+        //             ['bottom content box'],
+        //         ]
+        //     })
+        // }, 1000)
 
-        setTimeout(() => {
-            rectflow.setLayout({
-                rows: '50px 50px auto',
-                columns: '50px auto 200px',
-                gap: 5,
-                areas: [
-                    ['menu menu menu'],
-                    ['head head head'],
-                    ['bottom content widget'],
-                ]
-            })
-        }, 2000)
+        // setTimeout(() => {
+        //     rectflow.setLayout({
+        //         rows: '50px 50px auto',
+        //         columns: '50px auto 200px',
+        //         gap: 5,
+        //         areas: [
+        //             ['menu menu menu'],
+        //             ['head head head'],
+        //             ['bottom content widget'],
+        //         ]
+        //     })
+        // }, 2000)
     </script>
 </body>
 

@@ -1,7 +1,7 @@
-import type { GridConfig } from './Grid'
+import type { LayoutConfig } from './LayoutConfig'
 
 export interface RectflowOptions {
     container: HTMLElement | null
-    layout: GridConfig
+    layout: LayoutConfig
     strict?: boolean
 }

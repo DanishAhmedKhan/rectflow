@@ -1,8 +1,8 @@
 import { RectflowError } from '../error/RectflowError'
 import { ErrorCode } from '../error/ErrorCode'
-import type { GridConfig } from '../types/Grid'
+import type { LayoutConfig } from '../types/LayoutConfig'
 
-export function assertGridConfig(config: GridConfig): void {
+export function assertLayoutConfig(config: LayoutConfig): void {
     if (!config) {
         throw new RectflowError('Grid config is required', ErrorCode.INVALID_GRID_CONFIG)
     }
