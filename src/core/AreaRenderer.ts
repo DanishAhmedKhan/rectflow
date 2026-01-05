@@ -13,7 +13,7 @@ export class AreaRenderer {
     private readonly options: ResolvedRectflowOptions
     private areas = new Map<string, AreaEntry>()
 
-    constructor(context: RectflowContext) {
+    constructor(private context: RectflowContext) {
         this.options = context.options
     }
 
@@ -31,6 +31,9 @@ export class AreaRenderer {
             auto: false,
             active: true,
         })
+
+        const rect = this.context.computedLayout?.[name]
+        if (rect) this.applyLayoutStyles(elem, rect)
 
         this.options.container.appendChild(elem)
     }

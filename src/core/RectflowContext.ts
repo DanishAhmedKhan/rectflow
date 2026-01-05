@@ -1,14 +1,16 @@
 import { AreaTopology } from './AreaTopology'
 import { LayoutEngine } from './LayoutEngine'
-import type { RectflowOptions, ResolvedRectflowOptions } from '../types/RectflowOptions'
 import { assertContainer } from '../helper/assertContainer'
 import { assertLayoutConfig } from '../helper/assertLayoutConfig'
-import type { LayoutConfig } from '../types/LayoutConfig'
+import type { RectflowOptions, ResolvedRectflowOptions } from '../types/RectflowOptions'
+import type { ComputedLayout, LayoutConfig } from '../types/LayoutConfig'
 
 export class RectflowContext {
     public readonly options: ResolvedRectflowOptions
     public readonly areaTopology: AreaTopology
     public readonly layoutEngine: LayoutEngine
+
+    public computedLayout?: ComputedLayout
 
     constructor(rawOptions: RectflowOptions) {
         const resolved = this.resolveOptions(rawOptions)

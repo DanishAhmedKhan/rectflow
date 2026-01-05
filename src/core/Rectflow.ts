@@ -38,8 +38,8 @@ export class Rectflow {
     }
 
     private applyCurrentLayout() {
-        const computedLayout = this.context.layoutEngine.calculate()
-        this.areaRenderer.applyLayout(computedLayout)
+        this.context.computedLayout = this.context.layoutEngine.calculate()
+        this.areaRenderer.applyLayout(this.context.computedLayout)
     }
 
     private handleError(err: unknown) {
@@ -54,6 +54,7 @@ export class Rectflow {
 
     public registerArea(area: string, elem: HTMLElement) {
         this.areaRenderer.registerArea(area, elem)
+        // this.applyCurrentLayout()
     }
 
     public setLayout(layout: LayoutConfig) {
