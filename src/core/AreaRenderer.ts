@@ -35,8 +35,8 @@ export class AreaRenderer {
         this.options.container.appendChild(elem)
     }
 
-    public applyRects(layout: ComputedLayout) {
-        const activeAreas = new Set(Object.keys(layout))
+    public applyLayout(computerLayout: ComputedLayout) {
+        const activeAreas = new Set(Object.keys(computerLayout))
 
         for (const [name, entry] of this.areas) {
             if (!activeAreas.has(name)) {
@@ -47,8 +47,8 @@ export class AreaRenderer {
             }
         }
 
-        for (const name in layout) {
-            const rect = layout[name]
+        for (const name in computerLayout) {
+            const rect = computerLayout[name]
             const entry = this.ensureArea(name)
 
             if (!entry.active) {
@@ -56,7 +56,7 @@ export class AreaRenderer {
                 entry.active = true
             }
 
-            this.applyRectStyles(entry.elem, rect)
+            this.applyLayoutStyles(entry.elem, rect)
         }
     }
 
@@ -90,7 +90,7 @@ export class AreaRenderer {
         return entry
     }
 
-    private applyRectStyles(elem: HTMLElement, rect: Rect) {
+    private applyLayoutStyles(elem: HTMLElement, rect: Rect) {
         elem.style.left = rect.x + 'px'
         elem.style.top = rect.y + 'px'
         elem.style.width = rect.width + 'px'

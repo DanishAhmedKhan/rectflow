@@ -3,6 +3,10 @@ import type { ComputedLayout, LayoutConfig } from '../types/LayoutConfig'
 export class LayoutEngine {
     constructor(private layout: LayoutConfig, private container: HTMLElement) {}
 
+    public setLayout(layout: LayoutConfig) {
+        this.layout = layout
+    }
+
     public calculate(): ComputedLayout {
         const gap = this.layout.gap ?? 0
 
