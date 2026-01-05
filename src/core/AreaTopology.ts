@@ -1,5 +1,5 @@
 import type { LayoutAreas } from '../types/LayoutConfig'
-import type { AreaName, ResizeHandle } from '../types/ResizeTypes'
+import type { AreaName, ResizeHandle, ResolvedResizeHandle } from '../types/ResizeTypes'
 
 type Cell = {
     area: AreaName
@@ -55,6 +55,7 @@ export class AreaTopology {
             }
         }
 
+        console.log(map)
         return map
     }
 
@@ -71,10 +72,7 @@ export class AreaTopology {
         )
     }
 
-    public resolveHandle(handle: ResizeHandle): {
-        direction: 'horizontal' | 'vertical'
-        gridLine: number
-    } {
+    public resolveHandle(handle: ResizeHandle): ResolvedResizeHandle {
         const boxes = this.computeBoxes()
         const a = boxes.get(handle.between[0])
         const b = boxes.get(handle.between[1])
@@ -84,14 +82,18 @@ export class AreaTopology {
         }
 
         if (this.isVerticalNeighbor(a, b)) {
+            console.log('first')
             return {
+                handle,
                 direction: 'vertical',
                 gridLine: Math.max(a.colEnd, b.colEnd),
             }
         }
 
         if (this.isHorizontalNeighbor(a, b)) {
+            console.log('second')
             return {
+                handle,
                 direction: 'horizontal',
                 gridLine: Math.max(a.rowEnd, b.rowEnd),
             }

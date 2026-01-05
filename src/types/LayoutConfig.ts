@@ -5,6 +5,7 @@ export type LayoutAreas = string[][]
 export type ComputedLayout = Record<AreaName, Rect>
 
 export interface Rect {
+    name: string
     x: number
     y: number
     width: number

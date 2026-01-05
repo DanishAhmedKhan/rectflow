@@ -8,16 +8,20 @@ export class ResizeManager {
     private config: ResizeConfig
     private resolvedHandles: ResolvedResizeHandle[] = []
 
-    constructor(context: RectflowContext) {
+    constructor(private context: RectflowContext) {
         this.areaTopology = context.areaTopology
         this.container = context.options.container
         this.config = context.options.layout.resize!
+
+        this.init()
     }
 
-    init() {
+    private init() {
         this.resolvedHandles = this.config.handles.map((handle) => {
-            this.areaTopology.resolveHandle(handle)
+            return this.areaTopology.resolveHandle(handle)
         })
+
+        console.log(this.resolvedHandles)
 
         this.createGutters()
     }
@@ -38,6 +42,7 @@ export class ResizeManager {
 
         const gutterSize = this.config.gutter ?? 6
 
+        gutter.style.position = 'absolute'
         gutter.style.height = `${gutterSize}px`
         gutter.style.left = '0'
         gutter.style.right = '0'
@@ -45,11 +50,21 @@ export class ResizeManager {
         this.container.appendChild(gutter)
 
         const rowIndex = handle.gridLine
+        console.log({ rowIndex })
+
+        const [aName, bName] = handle.handle.between
+        const a = this.areas.get(aName)!
+        const b = this.areas.get(bName)!
+
+        // determine which is top & bottom
+        const topArea = a.top <= b.top ? a : b
+        const bottomArea = topArea === a ? b : a
 
         const updatePosition = () => {
             const rowSizes = this.getRowSizes()
+            console.log({ rowSizes })
             const top = rowSizes.slice(0, rowIndex).reduce((a, b) => a + b, 0)
-
+            console.log(`${top - gutterSize / 2}px`)
             gutter.style.top = `${top - gutterSize / 2}px`
         }
 
@@ -73,7 +88,7 @@ export class ResizeManager {
             const topSize = startSizes[rowIndex - 1] + dy
             const bottomSize = startSizes[rowIndex] - dy
 
-            if (handle.min !== undefined && (topSize < handle.min || bottomSize < handle.min)) return
+            // if (handle.min !== undefined && (topSize < handle.min || bottomSize < handle.min)) return
 
             const sizes = [...startSizes]
             sizes[rowIndex - 1] = topSize
@@ -132,7 +147,7 @@ export class ResizeManager {
             const leftSize = startSizes[colIndex - 1] + dx
             const rightSize = startSizes[colIndex] - dx
 
-            if (handle.min !== undefined && (leftSize < handle.min || rightSize < handle.min)) return
+            // if (handle.min !== undefined && (leftSize < handle.min || rightSize < handle.min)) return
 
             const sizes = [...startSizes]
             sizes[colIndex - 1] = leftSize
@@ -148,5 +163,29 @@ export class ResizeManager {
         }
 
         gutter.addEventListener('mousedown', onMouseDown)
+    }
+
+    private getColumnSizes(): number[] {
+        const cols = getComputedStyle(this.container)
+            .gridTemplateColumns.split(' ')
+            .map((v) => parseFloat(v))
+
+        return cols
+    }
+
+    private getRowSizes(): number[] {
+        const rows = getComputedStyle(this.container)
+            .gridTemplateRows.split(' ')
+            .map((v) => parseFloat(v))
+
+        return rows
+    }
+
+    private setColumnSizes(sizes: number[]) {
+        this.container.style.gridTemplateColumns = sizes.map((v) => `${v}px`).join(' ')
+    }
+
+    private setRowSizes(sizes: number[]) {
+        this.container.style.gridTemplateRows = sizes.map((v) => `${v}px`).join(' ')
     }
 }

@@ -39,6 +39,7 @@ export class Rectflow {
 
     private applyCurrentLayout() {
         this.context.computedLayout = this.context.layoutEngine.calculate()
+        console.log('a', this.context.computedLayout)
         this.areaRenderer.applyLayout(this.context.computedLayout)
     }
 

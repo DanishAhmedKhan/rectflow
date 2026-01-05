@@ -20,6 +20,24 @@
         .head {
             background-color: blueviolet;
         }
+
+        .rf-gutter {
+            position: absolute;
+            z-index: 20;
+            background: transparent;
+        }
+
+        .rf-gutter:hover {
+            background: rgba(0, 0, 0, 0.08);
+        }
+
+        .rf-gutter.vertical {
+            cursor: col-resize;
+        }
+
+        .rf-gutter.horizontal {
+            cursor: row-resize;
+        }
     </style>
 </head>
 

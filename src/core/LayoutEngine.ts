@@ -33,6 +33,7 @@ export class LayoutEngine {
 
                 if (!result[name]) {
                     result[name] = {
+                        name,
                         x: colOffsets[c],
                         y: rowOffsets[r],
                         width: cols[c],
