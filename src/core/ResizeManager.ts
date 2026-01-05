@@ -1,13 +1,23 @@
-import type { ResolvedResizeHandle } from '../types/ResizeTypes'
+import type { ResizeConfig, ResolvedResizeHandle } from '../types/ResizeTypes'
 import type { AreaTopology } from './AreaTopology'
+import type { RectflowContext } from './RectflowContext'
 
 export class ResizeManager {
+    private areaTopology: AreaTopology
+    private container: HTMLElement
+    private config: ResizeConfig
     private resolvedHandles: ResolvedResizeHandle[] = []
 
-    constructor(private container: HTMLElement, private topology: AreaTopology, private config: ResizeConfig) {}
+    constructor(context: RectflowContext) {
+        this.areaTopology = context.areaTopology
+        this.container = context.options.container
+        this.config = context.options.layout.resize!
+    }
 
     init() {
-        this.resolvedHandles = this.config.handles.map((handle) => this.topology.resolveHandle(handle))
+        this.resolvedHandles = this.config.handles.map((handle) => {
+            this.areaTopology.resolveHandle(handle)
+        })
 
         this.createGutters()
     }

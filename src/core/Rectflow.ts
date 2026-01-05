@@ -6,35 +6,33 @@ import { assertLayoutConfig } from '../helper/assertLayoutConfig'
 import type { RectflowOptions } from '../types/RectflowOptions'
 import type { LayoutConfig } from '../types/LayoutConfig'
 import type { Resolved } from '../types/Resolved'
+import { AreaTopology } from './AreaTopology'
+import { RectflowContext } from './RectflowContext'
+import { ResizeManager } from './ResizeManager'
 
 export class Rectflow {
     private readonly options: Resolved<RectflowOptions>
 
+    private context!: RectflowContext
     private areaRenderer!: AreaRenderer
+    private resizeManager!: ResizeManager
     private observer!: ResizeObserver
 
     constructor(options: RectflowOptions) {
-        assertContainer(options.container)
-        assertLayoutConfig(options.layout)
-
-        this.options = {
-            ...options,
-            container: options.container,
-            strict: options.strict ?? true,
-        }
-
-        options.container.style.position = 'relative'
-
         this.init()
     }
 
     private init() {
         try {
-            this.areaRenderer = new AreaRenderer(this.options)
+            this.context = new RectflowContext(this.options)
+
+            this.areaRenderer = new AreaRenderer(this.context)
             this.layout()
 
+            this.resizeManager = new ResizeManager(this.context)
+
             this.observer = new ResizeObserver(() => this.layout())
-            this.observer.observe(this.options.container!)
+            // this.observer.observe(this.options.container!)
         } catch (err) {
             if (this.options.strict) throw err
 

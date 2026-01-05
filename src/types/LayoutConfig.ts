@@ -1,4 +1,4 @@
-import type { ResizeHandle } from './ResizeTypes'
+import type { ResizeConfig } from './ResizeTypes'
 
 export type AreaName = string
 export type LayoutAreas = string[][]
@@ -16,9 +16,5 @@ export interface LayoutConfig {
     columns: string
     areas: LayoutAreas
     gap?: number
-
-    resize?: {
-        handles: ResizeHandle[]
-        gutter?: number
-    }
+    resize?: ResizeConfig
 }

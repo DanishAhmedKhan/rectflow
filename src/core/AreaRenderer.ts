@@ -1,7 +1,7 @@
 import { randomColor } from '../helper/randomColor'
-import type { RectflowOptions } from '../types/RectflowOptions'
+import type { ResolvedRectflowOptions } from '../types/RectflowOptions'
 import type { ComputedLayout, Rect } from '../types/LayoutConfig'
-import type { Resolved } from '../types/Resolved'
+import type { RectflowContext } from './RectflowContext'
 
 type AreaEntry = {
     elem: HTMLElement
@@ -10,9 +10,12 @@ type AreaEntry = {
 }
 
 export class AreaRenderer {
+    private readonly options: ResolvedRectflowOptions
     private areas = new Map<string, AreaEntry>()
 
-    constructor(private readonly options: Resolved<RectflowOptions>) {}
+    constructor(context: RectflowContext) {
+        this.options = context.options
+    }
 
     public registerArea(name: string, elem: HTMLElement) {
         const existing = this.areas.get(name)

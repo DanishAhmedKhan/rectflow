@@ -1,16 +1,25 @@
-import type { Rect, ComputedLayout, LayoutConfig } from '../types/LayoutConfig'
+import type { ComputedLayout, LayoutConfig } from '../types/LayoutConfig'
 
 export class LayoutEngine {
-    public static calculate(layout: LayoutConfig, container: Rect): ComputedLayout {
-        const gap = layout.gap ?? 0
+    constructor(private layout: LayoutConfig, private container: HTMLElement) {}
 
-        const rows = this.parseTracks(layout.rows, container.height, gap)
-        const cols = this.parseTracks(layout.columns, container.width, gap)
+    public calculate(): ComputedLayout {
+        const gap = this.layout.gap ?? 0
+
+        const rect = {
+            x: 0,
+            y: 0,
+            width: this.container.clientWidth,
+            height: this.container.clientHeight,
+        }
+
+        const rows = this.parseTracks(this.layout.rows, rect.height, gap)
+        const cols = this.parseTracks(this.layout.columns, rect.width, gap)
 
         const rowOffsets = this.accumulate(rows, gap)
         const colOffsets = this.accumulate(cols, gap)
 
-        const areas = this.normalizeAreas(layout.areas)
+        const areas = this.normalizeAreas(this.layout.areas)
         const result: ComputedLayout = {}
 
         for (let r = 0; r < areas.length; r++) {
@@ -41,11 +50,11 @@ export class LayoutEngine {
         return result
     }
 
-    private static normalizeAreas(areas: string[][]): string[][] {
+    private normalizeAreas(areas: string[][]): string[][] {
         return areas.map((row) => (row.length === 1 ? row[0].trim().split(/\s+/) : row))
     }
 
-    private static parseTracks(def: string, total: number, gap: number): number[] {
+    private parseTracks(def: string, total: number, gap: number): number[] {
         const parts = def.split(/\s+/)
 
         let fixed = 0
@@ -73,7 +82,7 @@ export class LayoutEngine {
         })
     }
 
-    private static accumulate(sizes: number[], gap: number): number[] {
+    private accumulate(sizes: number[], gap: number): number[] {
         const offsets: number[] = []
         let current = 0
         for (const s of sizes) {
