@@ -19,9 +19,11 @@ export class RectflowContext {
 
         this.initContainerStyle()
 
-        this.areaTopology = new AreaTopology(resolved.layout.areas)
         this.layoutEngine = new LayoutEngine(resolved.layout, resolved.container)
-        this.computedLayout = this.layoutEngine.calculate()
+        this.computedLayout = this.layoutEngine.computedLayout
+        console.log(this.computedLayout)
+
+        this.areaTopology = new AreaTopology(resolved.layout.areas)
     }
 
     private resolveOptions(options: RectflowOptions): ResolvedRectflowOptions {
@@ -48,10 +50,10 @@ export class RectflowContext {
     }
 
     private normalizeLayout(layout: LayoutConfig): LayoutConfig {
-        return {
-            ...layout,
-            areas: this.normalizeAreas(layout.areas),
-        }
+        if (!layout.gap) layout.gap = 0
+        layout.areas = this.normalizeAreas(layout.areas)
+
+        return layout
     }
 
     private normalizeAreas(areas: string[][]): string[][] {

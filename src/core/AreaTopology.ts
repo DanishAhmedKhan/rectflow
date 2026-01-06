@@ -15,23 +15,47 @@ type AreaBox = {
     colEnd: number
 }
 
+type BoundaryId = string
+
+interface HorizontalBoundary {
+    id: BoundaryId
+    y: number
+
+    // areas touching this boundary
+    above: Set<string> // area names
+    below: Set<string>
+}
+
 export class AreaTopology {
     private cells: Cell[] = []
 
-    constructor(private areas: LayoutAreas) {
+    private horizontalBoundaries = new Map<BoundaryId, HorizontalBoundary>()
+    private areaToBoundaries = new Map<
+        string,
+        {
+            top?: BoundaryId
+            bottom?: BoundaryId
+        }
+    >()
+
+    constructor(private layoutAreas: LayoutAreas) {
         this.buildCells()
     }
 
     private buildCells() {
-        for (let r = 0; r < this.areas.length; r++) {
-            for (let c = 0; c < this.areas[r].length; c++) {
+        this.cells = []
+
+        for (let r = 0; r < this.layoutAreas.length; r++) {
+            for (let c = 0; c < this.layoutAreas[r].length; c++) {
                 this.cells.push({
-                    area: this.areas[r][c],
+                    area: this.layoutAreas[r][c],
                     row: r,
                     col: c,
                 })
             }
         }
+
+        console.log(this.cells)
     }
 
     private computeBoxes(): Map<AreaName, AreaBox> {
@@ -57,6 +81,24 @@ export class AreaTopology {
 
         return map
     }
+
+    // AAAAAA
+    // BCCCDF
+    // BCCCDF
+    // BEEEDF
+    // GGGGHH
+    // JJLLKK
+
+    // horizontal = [
+    //     {
+    //         above: [A],
+    //         below: [B C D F],
+    //     }
+    //     {
+    //         above: [],
+    //         below: [],
+    //     }
+    // ]
 
     private isVerticalNeighbor(a: AreaBox, b: AreaBox): boolean {
         return (

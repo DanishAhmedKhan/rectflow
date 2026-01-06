@@ -18,11 +18,11 @@ export class ResizeManager {
     }
 
     private init() {
-        this.resolvedHandles = this.config.handles.map((handle) => {
+        this.resolvedHandles = this.config?.handles.map((handle) => {
             return this.areaTopology.resolveHandle(handle)
         })
 
-        this.createGutters()
+        if (this.resolvedHandles) this.createGutters()
     }
 
     private createGutters() {

@@ -1,8 +1,9 @@
+import type { Area } from '../core/Area'
 import type { ResizeConfig } from './ResizeTypes'
 
 export type AreaName = string
 export type LayoutAreas = string[][]
-export type ComputedLayout = Record<AreaName, Rect>
+export type ComputedLayout = Record<AreaName, Area>
 
 export interface Rect {
     name: string

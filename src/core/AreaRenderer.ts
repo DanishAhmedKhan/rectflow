@@ -79,6 +79,7 @@ export class AreaRenderer {
         if (existing) return existing
 
         const elem = document.createElement('div')
+        elem.innerHTML = name
         elem.dataset.rectflowArea = name
         elem.style.position = 'absolute'
         elem.style.background = randomColor()

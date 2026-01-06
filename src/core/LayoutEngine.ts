@@ -1,13 +1,19 @@
 import type { ComputedLayout, LayoutConfig } from '../types/LayoutConfig'
+import { Area } from './Area'
 
 export class LayoutEngine {
-    constructor(private layout: LayoutConfig, private container: HTMLElement) {}
+    public computedLayout!: ComputedLayout
+
+    constructor(private layout: LayoutConfig, private container: HTMLElement) {
+        this.calculate()
+    }
 
     public setLayout(layout: LayoutConfig) {
         this.layout = layout
+        this.calculate()
     }
 
-    public calculate(): ComputedLayout {
+    public calculate() {
         const gap = this.layout.gap ?? 0
 
         const rect = {
@@ -32,13 +38,13 @@ export class LayoutEngine {
                 if (name === '.') continue
 
                 if (!result[name]) {
-                    result[name] = {
+                    result[name] = new Area({
                         name,
                         x: colOffsets[c],
                         y: rowOffsets[r],
                         width: cols[c],
                         height: rows[r],
-                    }
+                    })
                 } else {
                     const rect = result[name]
                     if (colOffsets[c] + cols[c] > rect.x + rect.width) {
@@ -52,7 +58,8 @@ export class LayoutEngine {
             }
         }
 
-        return result
+        this.computedLayout = result
+        // return result
     }
 
     private normalizeAreas(areas: string[][]): string[][] {

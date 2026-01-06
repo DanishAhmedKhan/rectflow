@@ -31,13 +31,7 @@ export class Rectflow {
 
             this.applyCurrentLayout()
         } catch (err) {
-            if (this.options.strict) throw err
-
-            if (err instanceof RectflowError) {
-                console.error(err.message, err.code)
-            } else {
-                console.error('[Rectflow] Unknown error', err)
-            }
+            this.handleError(err)
         }
     }
 

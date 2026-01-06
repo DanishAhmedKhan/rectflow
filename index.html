@@ -44,43 +44,86 @@
 
 <body>
     <div class="main">
-        <div class="head">HEAD</div>
+        <!-- <div class="head">HEAD</div> -->
     </div>
 
     <script type="module">
         import { Rectflow } from './src/index'
+
+        const horizontal = [
+            {
+                above: ['A', 'X', 'Y'],
+                below: ['B', 'C', 'D', 'F'],
+            },
+            {
+                above: ['C'],
+                below: ['E', 'Z'],
+            },
+            {
+                above: ['B', 'E', 'Z'],
+                below: ['P', 'G', 'H'],
+            },
+            {
+                above: ['F'],
+                below: ['M'],
+            },
+            {
+                above: ['G', 'H', 'D', 'M'],
+                below: ['J', 'L', 'K'],
+            },
+        ]
 
         const mainElem = document.querySelector('.main')
 
         const rectflow = new Rectflow({
             container: mainElem,
             layout: {
-                rows: '50px auto 50px',
-                columns: '50px auto 100px',
+                rows: '1fr 1fr 1fr 1fr 1fr 1fr',
+                columns: '1fr 1fr 1fr 1fr 1fr 1fr',
                 gap: 16,
                 areas: [
-                    ['head head head'],
-                    ['menu content widget'],
-                    ['menu bottom widget']
+                    ['A A X X X Y'],
+                    ['B C C C D F'],
+                    ['B C C C D F'],
+                    ['B E Z Z D F'],
+                    ['P G G H D M'],
+                    ['P J L L K K'],
                 ],
-                resize: {
-                    handles: [
-                        {
-                            between: ['head', 'content'],
-                        },
-                    ],
-                    gutter: 6,
-                }
             }
         })
 
-        rectflow.registerArea('head', document.querySelector('.head'))
+        // const rectflow = new Rectflow({
+        //     container: mainElem,
+        //     layout: {
+        //         rows: '50px auto 50px',
+        //         columns: '50px auto 100px',
+        //         gap: 16,
+        //         areas: [
+        //             ['head head head'],
+        //             ['menu content widget'],
+        //             ['menu bottom widget']
+        //         ],
+        //         resize: {
+        //             handles: [
+        //                 {
+        //                     between: ['head', 'content'],
+        //                 },
+        //                 {
+        //                     between: ['content', 'bottom'],
+        //                 },
+        //             ],
+        //             gutter: 6,
+        //         }
+        //     }
+        // })
 
-        const contentElem = rectflow.getArea('content')
-        contentElem.innerHTML = 'Danish'
+        // rectflow.registerArea('head', document.querySelector('.head'))
 
-        const widgetElem = rectflow.getArea('widget')
-        widgetElem.innerHTML = 'Widget'
+        // const contentElem = rectflow.getArea('content')
+        // contentElem.innerHTML = 'Danish'
+
+        // const widgetElem = rectflow.getArea('widget')
+        // widgetElem.innerHTML = 'Widget'
 
         // setTimeout(() => {
         //     rectflow.setLayout({
