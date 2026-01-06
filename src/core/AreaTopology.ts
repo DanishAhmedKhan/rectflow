@@ -55,7 +55,6 @@ export class AreaTopology {
             }
         }
 
-        console.log(map)
         return map
     }
 
@@ -82,7 +81,6 @@ export class AreaTopology {
         }
 
         if (this.isVerticalNeighbor(a, b)) {
-            console.log('first')
             return {
                 handle,
                 direction: 'vertical',
@@ -91,7 +89,6 @@ export class AreaTopology {
         }
 
         if (this.isHorizontalNeighbor(a, b)) {
-            console.log('second')
             return {
                 handle,
                 direction: 'horizontal',

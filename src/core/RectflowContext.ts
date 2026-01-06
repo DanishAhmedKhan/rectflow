@@ -10,7 +10,8 @@ export class RectflowContext {
     public readonly areaTopology: AreaTopology
     public readonly layoutEngine: LayoutEngine
 
-    public computedLayout?: ComputedLayout
+    public onLayoutChange?: () => void
+    public computedLayout: ComputedLayout
 
     constructor(rawOptions: RectflowOptions) {
         const resolved = this.resolveOptions(rawOptions)
@@ -20,6 +21,7 @@ export class RectflowContext {
 
         this.areaTopology = new AreaTopology(resolved.layout.areas)
         this.layoutEngine = new LayoutEngine(resolved.layout, resolved.container)
+        this.computedLayout = this.layoutEngine.calculate()
     }
 
     private resolveOptions(options: RectflowOptions): ResolvedRectflowOptions {

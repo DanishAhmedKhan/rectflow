@@ -1,3 +1,4 @@
+import type { Rect } from '../types/LayoutConfig'
 import type { ResizeConfig, ResolvedResizeHandle } from '../types/ResizeTypes'
 import type { AreaTopology } from './AreaTopology'
 import type { RectflowContext } from './RectflowContext'
@@ -20,8 +21,6 @@ export class ResizeManager {
         this.resolvedHandles = this.config.handles.map((handle) => {
             return this.areaTopology.resolveHandle(handle)
         })
-
-        console.log(this.resolvedHandles)
 
         this.createGutters()
     }
@@ -49,52 +48,68 @@ export class ResizeManager {
 
         this.container.appendChild(gutter)
 
-        const rowIndex = handle.gridLine
-        console.log({ rowIndex })
-
         const [aName, bName] = handle.handle.between
-        const a = this.areas.get(aName)!
-        const b = this.areas.get(bName)!
+        console.log('asdas', this.context.computedLayout)
 
-        // determine which is top & bottom
-        const topArea = a.top <= b.top ? a : b
+        const a = this.context.computedLayout[aName]
+        const b = this.context.computedLayout[bName]
+
+        const topArea = a.y <= b.y ? a : b
         const bottomArea = topArea === a ? b : a
 
         const updatePosition = () => {
-            const rowSizes = this.getRowSizes()
-            console.log({ rowSizes })
-            const top = rowSizes.slice(0, rowIndex).reduce((a, b) => a + b, 0)
-            console.log(`${top - gutterSize / 2}px`)
-            gutter.style.top = `${top - gutterSize / 2}px`
+            const layout = this.context.computedLayout
+            if (!layout) return
+
+            const gap = this.context.options.layout.gap ?? 0
+            const rect = layout[topArea.name]
+            const top = rect.y + rect.height + gap / 2 - gutterSize / 2
+
+            gutter.style.top = `${top}px`
         }
 
         updatePosition()
 
         let startY = 0
-        let startSizes: number[] = []
+        let startTopRect: Rect
+        let startBottomRect: Rect
 
         const onMouseDown = (e: MouseEvent) => {
             e.preventDefault()
             startY = e.clientY
-            startSizes = this.getRowSizes()
+
+            startTopRect = { ...this.context.computedLayout[topArea.name] }
+            startBottomRect = { ...this.context.computedLayout[bottomArea.name] }
 
             document.addEventListener('mousemove', onMouseMove)
             document.addEventListener('mouseup', onMouseUp)
         }
 
         const onMouseMove = (e: MouseEvent) => {
+            if (!this.context.computedLayout) return
+
             const dy = e.clientY - startY
 
-            const topSize = startSizes[rowIndex - 1] + dy
-            const bottomSize = startSizes[rowIndex] - dy
+            const newTopHeight = startTopRect.height + dy
+            const newBottomHeight = startBottomRect.height - dy
 
-            // if (handle.min !== undefined && (topSize < handle.min || bottomSize < handle.min)) return
+            if (newTopHeight <= 0 || newBottomHeight <= 0) return
 
-            const sizes = [...startSizes]
-            sizes[rowIndex - 1] = topSize
-            sizes[rowIndex] = bottomSize
+            this.context.computedLayout[topArea.name] = {
+                ...startTopRect,
+                height: startTopRect.height + dy,
+                // height: newTopHeight,
+            }
 
-            this.setRowSizes(sizes)
+            this.context.computedLayout[bottomArea.name] = {
+                ...startBottomRect,
+                y: startBottomRect.y + dy,
+                height: startBottomRect.height - dy,
+                // y: startTopRect.y + newTopHeight + 16, // ✅ GAP PRESERVED
+                // height: newBottomHeight,
+            }
+
+            this.context.onLayoutChange?.()
             updatePosition()
         }
 
@@ -112,6 +127,7 @@ export class ResizeManager {
 
         const gutterSize = this.config.gutter ?? 6
 
+        gutter.style.position = 'absolute'
         gutter.style.width = `${gutterSize}px`
         gutter.style.top = '0'
         gutter.style.bottom = '0'
