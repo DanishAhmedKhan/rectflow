@@ -93,6 +93,7 @@ export class AreaTopology {
             }
         }
 
+        console.log('map', map)
         return map
     }
 
