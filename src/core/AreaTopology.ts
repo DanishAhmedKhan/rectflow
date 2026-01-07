@@ -1,5 +1,5 @@
 import type { LayoutAreas } from '../types/LayoutConfig'
-import type { AreaName, ResizeHandle, ResolvedResizeHandle } from '../types/ResizeTypes'
+import type { ResizeHandle, ResolvedResizeHandle } from '../types/ResizeTypes'
 
 type Cell = {
     area: AreaName
@@ -15,23 +15,6 @@ type AreaBox = {
     colEnd: number
 }
 
-type BoundaryId = string
-
-interface HorizontalBoundary {
-    id: BoundaryId
-    y: number
-
-    // areas touching this boundary
-    above: Set<string> // area names
-    below: Set<string>
-}
-
-type ResolvedBoundary = {
-    orientation: 'horizontal' | 'vertical'
-    first: AreaName[]
-    second: AreaName[]
-}
-
 type AreaName = string
 
 type BoundaryGroup = {
@@ -41,24 +24,14 @@ type BoundaryGroup = {
 
 export class AreaTopology {
     private cells: Cell[] = []
-
-    private horizontalBoundaries = new Map<BoundaryId, HorizontalBoundary>()
-    private areaToBoundaries = new Map<
-        string,
-        {
-            top?: BoundaryId
-            bottom?: BoundaryId
-        }
-    >()
+    private boxes: Map<AreaName, AreaBox> = new Map<AreaName, AreaBox>()
 
     constructor(private layoutAreas: LayoutAreas) {
         this.buildCells()
-
-        // this.computeHorizontalBoundaries()
+        this.computeBoxes()
     }
 
     private buildCells() {
-        // console.log('layoutArea', this.layoutAreas)
         this.cells = []
 
         for (let r = 0; r < this.layoutAreas.length; r++) {
@@ -72,12 +45,10 @@ export class AreaTopology {
         }
     }
 
-    private computeBoxes(): Map<AreaName, AreaBox> {
-        const map = new Map<AreaName, AreaBox>()
-
+    private computeBoxes() {
         for (const cell of this.cells) {
-            if (!map.has(cell.area)) {
-                map.set(cell.area, {
+            if (!this.boxes.has(cell.area)) {
+                this.boxes.set(cell.area, {
                     area: cell.area,
                     rowStart: cell.row,
                     rowEnd: cell.row,
@@ -85,16 +56,13 @@ export class AreaTopology {
                     colEnd: cell.col,
                 })
             } else {
-                const box = map.get(cell.area)!
+                const box = this.boxes.get(cell.area)!
                 box.rowStart = Math.min(box.rowStart, cell.row)
                 box.rowEnd = Math.max(box.rowEnd, cell.row)
                 box.colStart = Math.min(box.colStart, cell.col)
                 box.colEnd = Math.max(box.colEnd, cell.col)
             }
         }
-
-        console.log('map', map)
-        return map
     }
 
     private isVerticalNeighbor(a: AreaBox, b: AreaBox): boolean {
@@ -149,10 +117,8 @@ export class AreaTopology {
     }
 
     public resolveHandle(handle: ResizeHandle): ResolvedResizeHandle {
-        const boxes = this.computeBoxes()
-        // console.log('boxes', boxes)
-        const a = boxes.get(handle.between[0])
-        const b = boxes.get(handle.between[1])
+        const a = this.boxes.get(handle.between[0])
+        const b = this.boxes.get(handle.between[1])
 
         if (!a || !b) {
             throw new Error('Invalid area name in resize handle')
