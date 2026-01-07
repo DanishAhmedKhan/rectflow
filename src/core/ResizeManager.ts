@@ -49,7 +49,7 @@ export class ResizeManager {
         this.container.appendChild(gutter)
 
         const [aName, bName] = handle.handle.between
-        console.log('asdas', this.context.computedLayout)
+        // console.log('asdas', this.context.computedLayout)
 
         const a = this.context.computedLayout[aName]
         const b = this.context.computedLayout[bName]

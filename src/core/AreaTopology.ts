@@ -26,6 +26,19 @@ interface HorizontalBoundary {
     below: Set<string>
 }
 
+type ResolvedBoundary = {
+    orientation: 'horizontal' | 'vertical'
+    first: AreaName[]
+    second: AreaName[]
+}
+
+type AreaName = string
+
+type BoundaryGroup = {
+    first: AreaName[]
+    second: AreaName[]
+}
+
 export class AreaTopology {
     private cells: Cell[] = []
 
@@ -40,9 +53,12 @@ export class AreaTopology {
 
     constructor(private layoutAreas: LayoutAreas) {
         this.buildCells()
+
+        // this.computeHorizontalBoundaries()
     }
 
     private buildCells() {
+        // console.log('layoutArea', this.layoutAreas)
         this.cells = []
 
         for (let r = 0; r < this.layoutAreas.length; r++) {
@@ -54,8 +70,6 @@ export class AreaTopology {
                 })
             }
         }
-
-        console.log(this.cells)
     }
 
     private computeBoxes(): Map<AreaName, AreaBox> {
@@ -82,30 +96,13 @@ export class AreaTopology {
         return map
     }
 
-    // AAAAAA
-    // BCCCDF
-    // BCCCDF
-    // BEEEDF
-    // GGGGHH
-    // JJLLKK
-
-    // horizontal = [
-    //     {
-    //         above: [A],
-    //         below: [B C D F],
-    //     }
-    //     {
-    //         above: [],
-    //         below: [],
-    //     }
-    // ]
-
     private isVerticalNeighbor(a: AreaBox, b: AreaBox): boolean {
         return (
             (a.colEnd + 1 === b.colStart || b.colEnd + 1 === a.colStart) &&
             !(a.rowEnd < b.rowStart || b.rowEnd < a.rowStart)
         )
     }
+
     private isHorizontalNeighbor(a: AreaBox, b: AreaBox): boolean {
         return (
             (a.rowEnd + 1 === b.rowStart || b.rowEnd + 1 === a.rowStart) &&
@@ -113,8 +110,46 @@ export class AreaTopology {
         )
     }
 
+    private rangesOverlap(aStart: number, aEnd: number, bStart: number, bEnd: number) {
+        return !(aEnd < bStart || bEnd < aStart)
+    }
+
+    computeHorizontalBoundaries(boxes: AreaBox[]): BoundaryGroup[] {
+        const map = new Map<number, BoundaryGroup>()
+
+        for (let i = 0; i < boxes.length; i++) {
+            for (let j = 0; j < boxes.length; j++) {
+                if (i === j) continue
+
+                const a = boxes[i]
+                const b = boxes[j]
+
+                // a is directly above b
+                if (a.rowEnd + 1 === b.rowStart && this.rangesOverlap(a.colStart, a.colEnd, b.colStart, b.colEnd)) {
+                    const key = a.rowEnd
+
+                    if (!map.has(key)) {
+                        map.set(key, { first: [], second: [] })
+                    }
+
+                    const group = map.get(key)!
+
+                    if (!group.first.includes(a.area)) {
+                        group.first.push(a.area)
+                    }
+                    if (!group.second.includes(b.area)) {
+                        group.second.push(b.area)
+                    }
+                }
+            }
+        }
+
+        return [...map.values()]
+    }
+
     public resolveHandle(handle: ResizeHandle): ResolvedResizeHandle {
         const boxes = this.computeBoxes()
+        // console.log('boxes', boxes)
         const a = boxes.get(handle.between[0])
         const b = boxes.get(handle.between[1])
 

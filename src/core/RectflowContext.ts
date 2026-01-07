@@ -21,7 +21,6 @@ export class RectflowContext {
 
         this.layoutEngine = new LayoutEngine(resolved.layout, resolved.container)
         this.computedLayout = this.layoutEngine.computedLayout
-        console.log(this.computedLayout)
 
         this.areaTopology = new AreaTopology(resolved.layout.areas)
     }
