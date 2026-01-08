@@ -17,6 +17,8 @@ export type AreaBox = {
 
 type AreaName = string
 
+type AxisKey = 'rowStart' | 'rowEnd' | 'colStart' | 'colEnd'
+
 type BoundaryGroup = {
     first: AreaName[]
     second: AreaName[]
@@ -83,29 +85,39 @@ export class AreaTopology {
         )
     }
 
-    public computeHorizontalBoundaries(boxes: AreaBox[]) {
+    public computeBoundaries(
+        boxes: AreaBox[],
+        primaryEnd: AxisKey,
+        primaryStart: AxisKey,
+        secondaryStart: AxisKey,
+        secondaryEnd: AxisKey,
+    ): BoundaryGroup[] {
         const result: BoundaryGroup[] = []
 
-        let minCol = Infinity
-        let maxCol = -Infinity
+        let minSecondary = Infinity
+        let maxSecondary = -Infinity
 
         for (const b of boxes) {
-            minCol = Math.min(minCol, b.colStart)
-            maxCol = Math.max(maxCol, b.colEnd)
+            minSecondary = Math.min(minSecondary, b[secondaryStart])
+            maxSecondary = Math.max(maxSecondary, b[secondaryEnd])
         }
 
         const boundaries = new Set<number>()
-        for (const b of boxes) boundaries.add(b.rowEnd)
+        for (const b of boxes) boundaries.add(b[primaryEnd])
 
-        for (const row of boundaries) {
+        for (const boundary of boundaries) {
             let current: BoundaryGroup | null = null
 
-            for (let col = minCol; col <= maxCol; col++) {
-                const above = boxes.find((b) => b.rowEnd === row && col >= b.colStart && col <= b.colEnd)?.area
+            for (let s = minSecondary; s <= maxSecondary; s++) {
+                const first = boxes.find(
+                    (b) => b[primaryEnd] === boundary && s >= b[secondaryStart] && s <= b[secondaryEnd],
+                )?.area
 
-                const below = boxes.find((b) => b.rowStart === row + 1 && col >= b.colStart && col <= b.colEnd)?.area
+                const second = boxes.find(
+                    (b) => b[primaryStart] === boundary + 1 && s >= b[secondaryStart] && s <= b[secondaryEnd],
+                )?.area
 
-                if (!above || !below || above === below) {
+                if (!first || !second || first === second) {
                     if (current) {
                         result.push(current)
                         current = null
@@ -117,58 +129,22 @@ export class AreaTopology {
                     current = { first: [], second: [] }
                 }
 
-                if (!current.first.includes(above)) current.first.push(above)
-                if (!current.second.includes(below)) current.second.push(below)
+                if (!current.first.includes(first)) current.first.push(first)
+                if (!current.second.includes(second)) current.second.push(second)
             }
 
             if (current) result.push(current)
         }
 
-        this.horizontalBoundary = result
+        return result
     }
 
-    public computeVerticalBoundaries(boxes: AreaBox[]) {
-        const result: BoundaryGroup[] = []
+    computeHorizontalBoundaries(boxes: AreaBox[]) {
+        this.horizontalBoundary = this.computeBoundaries(boxes, 'rowEnd', 'rowStart', 'colStart', 'colEnd')
+    }
 
-        let minRow = Infinity
-        let maxRow = -Infinity
-
-        for (const b of boxes) {
-            minRow = Math.min(minRow, b.rowStart)
-            maxRow = Math.max(maxRow, b.rowEnd)
-        }
-
-        const boundaries = new Set<number>()
-        for (const b of boxes) boundaries.add(b.colEnd)
-
-        for (const col of boundaries) {
-            let current: BoundaryGroup | null = null
-
-            for (let row = minRow; row <= maxRow; row++) {
-                const left = boxes.find((b) => b.colEnd === col && row >= b.rowStart && row <= b.rowEnd)?.area
-
-                const right = boxes.find((b) => b.colStart === col + 1 && row >= b.rowStart && row <= b.rowEnd)?.area
-
-                if (!left || !right || left === right) {
-                    if (current) {
-                        result.push(current)
-                        current = null
-                    }
-                    continue
-                }
-
-                if (!current) {
-                    current = { first: [], second: [] }
-                }
-
-                if (!current.first.includes(left)) current.first.push(left)
-                if (!current.second.includes(right)) current.second.push(right)
-            }
-
-            if (current) result.push(current)
-        }
-
-        this.verticalBoundary = result
+    computeVerticalBoundaries(boxes: AreaBox[]) {
+        this.verticalBoundary = this.computeBoundaries(boxes, 'colEnd', 'colStart', 'rowStart', 'rowEnd')
     }
 
     public resolveHandle(handle: ResizeHandle): ResolvedResizeHandle {
