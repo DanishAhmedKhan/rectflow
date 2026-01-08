@@ -23,7 +23,7 @@ export class Rectflow {
     private process() {
         try {
             this.areaRenderer = new AreaRenderer(this.context)
-            // this.resizeManager = new ResizeManager(this.context)
+            this.resizeManager = new ResizeManager(this.context)
 
             this.context.onLayoutChange = () => {
                 this.areaRenderer.applyLayout(this.context.computedLayout!)

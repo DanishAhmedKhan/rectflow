@@ -35,7 +35,7 @@ export class LayoutEngine {
         const rowOffsets = this.accumulate(rows, gap)
         const colOffsets = this.accumulate(cols, gap)
 
-        const areas = this.layout.areas
+        // const areas = this.layout.areas
         const result: ComputedLayout = {}
 
         // for (let r = 0; r < areas.length; r++) {
