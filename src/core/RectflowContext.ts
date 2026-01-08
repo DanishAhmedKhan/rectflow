@@ -19,10 +19,10 @@ export class RectflowContext {
 
         this.initContainerStyle()
 
-        this.layoutEngine = new LayoutEngine(resolved.layout, resolved.container)
-        this.computedLayout = this.layoutEngine.computedLayout
-
         this.areaTopology = new AreaTopology(resolved.layout.areas)
+
+        this.layoutEngine = new LayoutEngine(resolved.layout, this.areaTopology.boxes, resolved.container)
+        this.computedLayout = this.layoutEngine.computedLayout
     }
 
     private resolveOptions(options: RectflowOptions): ResolvedRectflowOptions {

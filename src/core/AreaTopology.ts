@@ -1,13 +1,13 @@
 import type { LayoutAreas } from '../types/LayoutConfig'
 import type { ResizeHandle, ResolvedResizeHandle } from '../types/ResizeTypes'
 
-type Cell = {
+export type Cell = {
     area: AreaName
     row: number
     col: number
 }
 
-type AreaBox = {
+export type AreaBox = {
     area: AreaName
     rowStart: number
     rowEnd: number
@@ -23,12 +23,12 @@ type BoundaryGroup = {
 }
 
 export class AreaTopology {
-    private cells: Cell[] = []
-    private boxes: Map<AreaName, AreaBox> = new Map<AreaName, AreaBox>()
+    public cells: Cell[] = []
+    public boxes: Record<AreaName, AreaBox> = {}
 
     constructor(private layoutAreas: LayoutAreas) {
         this.buildCells()
-        this.computeBoxes()
+        this.calculateBoxes()
     }
 
     private buildCells() {
@@ -45,18 +45,18 @@ export class AreaTopology {
         }
     }
 
-    private computeBoxes() {
+    private calculateBoxes() {
         for (const cell of this.cells) {
-            if (!this.boxes.has(cell.area)) {
-                this.boxes.set(cell.area, {
+            if (!this.boxes[cell.area]) {
+                this.boxes[cell.area] = {
                     area: cell.area,
                     rowStart: cell.row,
                     rowEnd: cell.row,
                     colStart: cell.col,
                     colEnd: cell.col,
-                })
+                }
             } else {
-                const box = this.boxes.get(cell.area)!
+                const box = this.boxes[cell.area]
                 box.rowStart = Math.min(box.rowStart, cell.row)
                 box.rowEnd = Math.max(box.rowEnd, cell.row)
                 box.colStart = Math.min(box.colStart, cell.col)
@@ -117,8 +117,8 @@ export class AreaTopology {
     }
 
     public resolveHandle(handle: ResizeHandle): ResolvedResizeHandle {
-        const a = this.boxes.get(handle.between[0])
-        const b = this.boxes.get(handle.between[1])
+        const a = this.boxes[handle.between[0]]
+        const b = this.boxes[handle.between[1]]
 
         if (!a || !b) {
             throw new Error('Invalid area name in resize handle')

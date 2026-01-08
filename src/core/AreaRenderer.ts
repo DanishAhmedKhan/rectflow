@@ -82,6 +82,7 @@ export class AreaRenderer {
         elem.innerHTML = name
         elem.dataset.rectflowArea = name
         elem.style.position = 'absolute'
+        elem.style.overflow = 'hidden'
         elem.style.background = randomColor()
 
         const entry: AreaEntry = {
