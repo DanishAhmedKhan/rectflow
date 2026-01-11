@@ -1,116 +1,110 @@
-import type { Rect } from '../types/LayoutConfig'
-import type { ResizeConfig, ResolvedResizeHandle } from '../types/ResizeTypes'
-import type { AreaTopology } from './AreaTopology'
+import { Rect } from './Rect'
+import { GutterView } from './GutterView'
+import type { ResizeHandle } from '../types/ResizeTypes'
+import type { AreaTopology, BoundaryGroup } from './AreaTopology'
 import type { RectflowContext } from './RectflowContext'
+import type { RectOption } from '../types/RectOption'
 
 export class ResizeManager {
     private areaTopology: AreaTopology
-    private container: HTMLElement
-    private config: ResizeConfig
-    private resolvedHandles: ResolvedResizeHandle[] = []
+    private gutterSize: number
+    private layoutGap: number
 
     constructor(private context: RectflowContext) {
         this.areaTopology = context.areaTopology
-        this.container = context.options.container
-        this.config = context.options.layout.resize!
-
-        this.init()
+        this.gutterSize = context.options.layout.resize?.gutter!
+        this.layoutGap = context.options.layout.gap ?? 0
     }
 
-    private init() {
-        this.resolvedHandles = this.config?.handles.map((handle) => {
-            return this.areaTopology.resolveHandle(handle)
-        })
-
-        if (this.resolvedHandles) this.createGutters()
+    public apply() {
+        this.createHorizontalGutters()
+        this.createVerticalGutters()
     }
 
-    private createGutters() {
-        for (const rh of this.resolvedHandles) {
-            if (rh.direction === 'vertical') {
-                this.createVerticalGutter(rh)
-            } else {
-                this.createHorizontalGutter(rh)
-            }
+    private computeHorizontalGutterSpan(boundary: BoundaryGroup) {
+        const areaNames = boundary.first
+
+        let minX = Infinity
+        let maxX = -Infinity
+
+        for (const name of areaNames) {
+            const rect = this.context.layoutEngine.computedRect[name]
+            minX = Math.min(minX, rect.x)
+            maxX = Math.max(maxX, rect.x + rect.width)
+        }
+
+        return {
+            x: minX,
+            width: maxX - minX,
         }
     }
 
-    private createHorizontalGutter(handle: ResolvedResizeHandle) {
-        const gutter = document.createElement('div')
-        gutter.className = 'rf-gutter horizontal'
+    private getBoundary(handle: ResizeHandle, boundaries: BoundaryGroup[]): BoundaryGroup | undefined {
+        const [a, b] = handle.between
 
-        const gutterSize = this.config.gutter ?? 6
-
-        gutter.style.position = 'absolute'
-        gutter.style.height = `${gutterSize}px`
-        gutter.style.left = '0'
-        gutter.style.right = '0'
-
-        this.container.appendChild(gutter)
-
-        const [aName, bName] = handle.handle.between
-        // console.log('asdas', this.context.computedLayout)
-
-        const a = this.context.computedLayout[aName]
-        const b = this.context.computedLayout[bName]
-
-        const topArea = a.y <= b.y ? a : b
-        const bottomArea = topArea === a ? b : a
-
-        const updatePosition = () => {
-            const layout = this.context.computedLayout
-            if (!layout) return
-
-            const gap = this.context.options.layout.gap ?? 0
-            const rect = layout[topArea.name]
-            const top = rect.y + rect.height + gap / 2 - gutterSize / 2
-
-            gutter.style.top = `${top}px`
+        for (const boundary of boundaries) {
+            if (
+                (boundary.first.includes(a) && boundary.second.includes(b)) ||
+                (boundary.first.includes(b) && boundary.second.includes(a))
+            )
+                return boundary
         }
+    }
 
-        updatePosition()
+    private createHorizontalGutters() {
+        const handles = this.context.options.layout.resize?.handles ?? []
 
+        for (const handle of handles) {
+            const boundary = this.getBoundary(handle, this.areaTopology.horizontalBoundary)
+            if (!boundary) continue
+
+            let rectOption = { ...this.computeHorizontalGutterSpan(boundary) } as RectOption
+            const areaName = handle.between[0]
+            const rect = this.context.layoutEngine.computedRect[areaName]
+            rectOption.y = rect.y + rect.height + this.layoutGap / 2 - this.gutterSize / 2
+            rectOption.height = this.gutterSize
+
+            const gutterView = new GutterView('horizontal', new Rect(rectOption))
+            gutterView.style({
+                background: 'blue',
+                cursor: 'row-resize',
+            })
+            gutterView.mount(this.context.options.container)
+
+            this.attachHorizontalDrag(gutterView, boundary)
+        }
+    }
+
+    private attachHorizontalDrag(gutterView: GutterView, boundary: BoundaryGroup) {
         let startY = 0
-        let startTopRect: Rect
-        let startBottomRect: Rect
+
+        const onMouseMove = (e: MouseEvent) => {
+            const dy = startY - e.clientY
+            startY = e.clientY
+
+            boundary.first.forEach((areaName) => {
+                const areView = this.context.areaRenderer.getView(areaName)
+                areView?.rect.shrinkFromBottom(dy)
+                areView?.apply()
+            })
+
+            boundary.second.forEach((areaName) => {
+                const areView = this.context.areaRenderer.getView(areaName)
+                areView?.rect.growFromTop(dy)
+                areView?.apply()
+            })
+
+            const rect = this.context.areaRenderer.getView(boundary.first[0])?.rect!
+            gutterView.rect.y = rect.y + rect.height + this.layoutGap / 2 - this.gutterSize / 2
+            gutterView.apply()
+        }
 
         const onMouseDown = (e: MouseEvent) => {
             e.preventDefault()
             startY = e.clientY
 
-            startTopRect = { ...this.context.computedLayout[topArea.name] }
-            startBottomRect = { ...this.context.computedLayout[bottomArea.name] }
-
             document.addEventListener('mousemove', onMouseMove)
             document.addEventListener('mouseup', onMouseUp)
-        }
-
-        const onMouseMove = (e: MouseEvent) => {
-            if (!this.context.computedLayout) return
-
-            const dy = e.clientY - startY
-
-            const newTopHeight = startTopRect.height + dy
-            const newBottomHeight = startBottomRect.height - dy
-
-            if (newTopHeight <= 0 || newBottomHeight <= 0) return
-
-            this.context.computedLayout[topArea.name] = {
-                ...startTopRect,
-                height: startTopRect.height + dy,
-                // height: newTopHeight,
-            }
-
-            this.context.computedLayout[bottomArea.name] = {
-                ...startBottomRect,
-                y: startBottomRect.y + dy,
-                height: startBottomRect.height - dy,
-                // y: startTopRect.y + newTopHeight + 16, // ✅ GAP PRESERVED
-                // height: newBottomHeight,
-            }
-
-            this.context.onLayoutChange?.()
-            updatePosition()
         }
 
         const onMouseUp = () => {
@@ -118,59 +112,83 @@ export class ResizeManager {
             document.removeEventListener('mouseup', onMouseUp)
         }
 
-        gutter.addEventListener('mousedown', onMouseDown)
+        gutterView.elem.addEventListener('mousedown', onMouseDown)
     }
 
-    private createVerticalGutter(handle: ResolvedResizeHandle) {
-        const gutter = document.createElement('div')
-        gutter.className = 'rf-gutter vertical'
+    private computeVerticalGutterSpan(boundary: BoundaryGroup) {
+        const areaNames = boundary.first
 
-        const gutterSize = this.config.gutter ?? 6
+        let minY = Infinity
+        let maxY = -Infinity
 
-        gutter.style.position = 'absolute'
-        gutter.style.width = `${gutterSize}px`
-        gutter.style.top = '0'
-        gutter.style.bottom = '0'
-
-        this.container.appendChild(gutter)
-
-        const colIndex = handle.gridLine
-
-        const updatePosition = () => {
-            const colSizes = this.getColumnSizes()
-            const left = colSizes.slice(0, colIndex).reduce((a, b) => a + b, 0)
-
-            gutter.style.left = `${left - gutterSize / 2}px`
+        for (const name of areaNames) {
+            const rect = this.context.layoutEngine.computedRect[name]
+            minY = Math.min(minY, rect.y)
+            maxY = Math.max(maxY, rect.y + rect.height)
         }
 
-        updatePosition()
+        return {
+            y: minY,
+            height: maxY - minY,
+        }
+    }
 
+    private createVerticalGutters() {
+        const handles = this.context.options.layout.resize?.handles ?? []
+
+        for (const handle of handles) {
+            const boundary = this.getBoundary(handle, this.areaTopology.verticalBoundary)
+            if (!boundary) continue
+
+            console.log(boundary)
+
+            let rectOption = { ...this.computeVerticalGutterSpan(boundary) } as RectOption
+            const areaName = handle.between[0]
+            const rect = this.context.layoutEngine.computedRect[areaName]
+            rectOption.x = rect.x + rect.width + this.layoutGap / 2 - this.gutterSize / 2
+            rectOption.width = this.gutterSize
+
+            const gutterView = new GutterView('horizontal', new Rect(rectOption))
+            gutterView.style({
+                background: 'red',
+                cursor: 'col-resize',
+            })
+            gutterView.mount(this.context.options.container)
+
+            this.attachVerticalDrag(gutterView, boundary)
+        }
+    }
+
+    private attachVerticalDrag(gutterView: GutterView, boundary: BoundaryGroup) {
         let startX = 0
-        let startSizes: number[] = []
+
+        const onMouseMove = (e: MouseEvent) => {
+            const dx = startX - e.clientX
+            startX = e.clientX
+
+            boundary.first.forEach((areaName) => {
+                const areView = this.context.areaRenderer.getView(areaName)
+                areView?.rect.shrinkFromRight(dx)
+                areView?.apply()
+            })
+
+            boundary.second.forEach((areaName) => {
+                const areView = this.context.areaRenderer.getView(areaName)
+                areView?.rect.growFromLeft(dx)
+                areView?.apply()
+            })
+
+            const rect = this.context.areaRenderer.getView(boundary.first[0])?.rect!
+            gutterView.rect.x = rect.x + rect.width + this.layoutGap / 2 - this.gutterSize / 2
+            gutterView.apply()
+        }
 
         const onMouseDown = (e: MouseEvent) => {
             e.preventDefault()
             startX = e.clientX
-            startSizes = this.getColumnSizes()
 
             document.addEventListener('mousemove', onMouseMove)
             document.addEventListener('mouseup', onMouseUp)
-        }
-
-        const onMouseMove = (e: MouseEvent) => {
-            const dx = e.clientX - startX
-
-            const leftSize = startSizes[colIndex - 1] + dx
-            const rightSize = startSizes[colIndex] - dx
-
-            // if (handle.min !== undefined && (leftSize < handle.min || rightSize < handle.min)) return
-
-            const sizes = [...startSizes]
-            sizes[colIndex - 1] = leftSize
-            sizes[colIndex] = rightSize
-
-            this.setColumnSizes(sizes)
-            updatePosition()
         }
 
         const onMouseUp = () => {
@@ -178,30 +196,6 @@ export class ResizeManager {
             document.removeEventListener('mouseup', onMouseUp)
         }
 
-        gutter.addEventListener('mousedown', onMouseDown)
-    }
-
-    private getColumnSizes(): number[] {
-        const cols = getComputedStyle(this.container)
-            .gridTemplateColumns.split(' ')
-            .map((v) => parseFloat(v))
-
-        return cols
-    }
-
-    private getRowSizes(): number[] {
-        const rows = getComputedStyle(this.container)
-            .gridTemplateRows.split(' ')
-            .map((v) => parseFloat(v))
-
-        return rows
-    }
-
-    private setColumnSizes(sizes: number[]) {
-        this.container.style.gridTemplateColumns = sizes.map((v) => `${v}px`).join(' ')
-    }
-
-    private setRowSizes(sizes: number[]) {
-        this.container.style.gridTemplateRows = sizes.map((v) => `${v}px`).join(' ')
+        gutterView.elem.addEventListener('mousedown', onMouseDown)
     }
 }

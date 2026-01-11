@@ -1,10 +1,10 @@
-import type { ComputedLayout, LayoutConfig } from '../types/LayoutConfig'
+import type { ComputedRect, LayoutConfig } from '../types/LayoutConfig'
 import type { AreaName } from '../types/ResizeTypes'
-import { Area } from './Area'
 import type { AreaBox } from './AreaTopology'
+import { Rect } from './Rect'
 
 export class LayoutEngine {
-    public computedLayout!: ComputedLayout
+    public computedRect: ComputedRect = {}
 
     constructor(
         private layout: LayoutConfig,
@@ -22,47 +22,11 @@ export class LayoutEngine {
     public calculate() {
         const gap = this.layout.gap ?? 0
 
-        const rect = {
-            x: 0,
-            y: 0,
-            width: this.container.clientWidth,
-            height: this.container.clientHeight,
-        }
-
-        const rows = this.parseTracks(this.layout.rows, rect.height, gap)
-        const cols = this.parseTracks(this.layout.columns, rect.width, gap)
+        const rows = this.parseTracks(this.layout.rows, this.container.clientHeight, gap)
+        const cols = this.parseTracks(this.layout.columns, this.container.clientWidth, gap)
 
         const rowOffsets = this.accumulate(rows, gap)
         const colOffsets = this.accumulate(cols, gap)
-
-        // const areas = this.layout.areas
-        const result: ComputedLayout = {}
-
-        // for (let r = 0; r < areas.length; r++) {
-        //     for (let c = 0; c < areas[r].length; c++) {
-        //         const name = areas[r][c]
-        //         if (name === '.') continue
-
-        //         if (!result[name]) {
-        //             result[name] = new Area({
-        //                 name,
-        //                 x: colOffsets[c],
-        //                 y: rowOffsets[r],
-        //                 width: cols[c],
-        //                 height: rows[r],
-        //             })
-        //         } else {
-        //             const rect = result[name]
-        //             if (colOffsets[c] + cols[c] > rect.x + rect.width) {
-        //                 rect.width = colOffsets[c] + cols[c] - rect.x
-        //             }
-
-        //             if (rowOffsets[r] + rows[r] > rect.y + rect.height) {
-        //                 rect.height = rowOffsets[r] + rows[r] - rect.y
-        //             }
-        //         }
-        //     }
-        // }
 
         for (const name in this.boxes) {
             const span = this.boxes[name]
@@ -82,10 +46,8 @@ export class LayoutEngine {
                 if (r < span.rowEnd) height += gap
             }
 
-            result[name] = new Area({ name, x, y, width, height })
+            this.computedRect[name] = new Rect({ x, y, width, height })
         }
-
-        this.computedLayout = result
     }
 
     private parseTracks(def: string, total: number, gap: number): number[] {

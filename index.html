@@ -12,170 +12,48 @@
             box-sizing: border-box;
         }
 
-        body {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-        }
-
         .main {
-            width: 100%;
-            height: 100%;
-        }
-
-        .head {
-            background-color: blueviolet;
-        }
-
-        .rf-gutter {
-            position: absolute;
-            z-index: 20;
-            background: transparent;
-            background: red;
-        }
-
-        .rf-gutter:hover {
-            /* background: rgba(0, 0, 0, 0.08); */
-        }
-
-        .rf-gutter.vertical {
-            cursor: col-resize;
-        }
-
-        .rf-gutter.horizontal {
-            cursor: row-resize;
+            width: 100vw;
+            height: 100vh;
         }
     </style>
 </head>
 
 <body>
-    <div class="main">
-        <!-- <div class="head">HEAD</div> -->
-    </div>
+    <div class="main"></div>
 
     <script type="module">
         import { Rectflow } from './src/index'
-
-        const horizontal = [
-            {
-                above: ['A', 'X', 'Y'],
-                below: ['B', 'C', 'D', 'F'],
-            },
-            {
-                above: ['C'],
-                below: ['E', 'Z'],
-            },
-            {
-                above: ['B', 'E', 'Z'],
-                below: ['P', 'G', 'H'],
-            },
-            {
-                above: ['F'],
-                below: ['M'],
-            },
-            {
-                above: ['G', 'H', 'D', 'M'],
-                below: ['J', 'L', 'K'],
-            },
-        ]
 
         const mainElem = document.querySelector('.main')
 
         const rectflow = new Rectflow({
             container: mainElem,
             layout: {
-                rows: '1fr 1fr 1fr 1fr 60px 1fr',
-                columns: '60px 1fr 1fr 1fr 1fr 100px',
-                gap: 10,
+                rows: '50px 1fr 1fr 1fr 1fr 60px 1fr',
+                columns: '100px 1fr 1fr 1fr 1fr 100px 1fr',
+                gap: 14,
                 areas: [
-                    ['A A X X X Y'],
-                    ['B C C C D F'],
-                    ['B C C C D F'],
-                    ['B E Z Z D F'],
-                    ['P G G H D M'],
-                    ['P J L L K K'],
+                    ['A A X X X Y O'],
+                    ['B C C C D F O'],
+                    ['B C C C D F O'],
+                    ['P C C C D F O'],
+                    ['P E Z Z D F O'],
+                    ['P G G H D M M'],
+                    ['P J L L K K R'],
                 ],
-                // resize: {
-                //     handles: [
-                //         { between: ['A', 'B'] }
-                //     ],
-                //     gutter: 6,
-                // }
+                resize: {
+                    handles: [
+                        { between: ['Z', 'H'] },
+                        { between: ['B', 'P'] },
+                        { between: ['D', 'F'] },
+                        { between: ['B', 'C'] },
+                        { between: ['X', 'C'] },
+                    ],
+                    gutter: 6,
+                }
             }
         })
-
-
-        // const rectflow = new Rectflow({
-        //     container: mainElem,
-        //     layout: {
-        //         rows: '1fr 1fr',
-        //         columns: '1fr 1fr 1fr',
-        //         gap: 10,
-        //         areas: [
-        //             ['A B C'],
-        //             ['D B E'],
-        //         ],
-        //     }
-        // })
-
-        // const rectflow = new Rectflow({
-        //     container: mainElem,
-        //     layout: {
-        //         rows: '50px auto 50px',
-        //         columns: '50px auto 100px',
-        //         gap: 16,
-        //         areas: [
-        //             ['head head head'],
-        //             ['menu content widget'],
-        //             ['menu bottom widget']
-        //         ],
-        //         resize: {
-        //             handles: [
-        //                 {
-        //                     between: ['head', 'content'],
-        //                 },
-        //                 {
-        //                     between: ['content', 'bottom'],
-        //                 },
-        //             ],
-        //             gutter: 6,
-        //         }
-        //     }
-        // })
-
-        // rectflow.registerArea('head', document.querySelector('.head'))
-
-        // const contentElem = rectflow.getArea('content')
-        // contentElem.innerHTML = 'Danish'
-
-        // const widgetElem = rectflow.getArea('widget')
-        // widgetElem.innerHTML = 'Widget'
-
-        // setTimeout(() => {
-        //     rectflow.setLayout({
-        //         rows: '50px 50px auto',
-        //         columns: '50px auto 200px',
-        //         gap: 5,
-        //         areas: [
-        //             ['menu menu menu'],
-        //             ['head head head'],
-        //             ['bottom content box'],
-        //         ]
-        //     })
-        // }, 1000)
-
-        // setTimeout(() => {
-        //     rectflow.setLayout({
-        //         rows: '50px 50px auto',
-        //         columns: '50px auto 200px',
-        //         gap: 5,
-        //         areas: [
-        //             ['menu menu menu'],
-        //             ['head head head'],
-        //             ['bottom content widget'],
-        //         ]
-        //     })
-        // }, 2000)
     </script>
 </body>
 

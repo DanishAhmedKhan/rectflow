@@ -1,16 +1,12 @@
 import { RectflowContext } from './RectflowContext'
-import { AreaRenderer } from './AreaRenderer'
-import { ResizeManager } from './ResizeManager'
 import { RectflowError } from '../error/RectflowError'
 import type { RectflowOptions } from '../types/RectflowOptions'
 import type { LayoutConfig } from '../types/LayoutConfig'
 
 export class Rectflow {
     private readonly options: RectflowOptions
-
     private context: RectflowContext
-    private areaRenderer!: AreaRenderer
-    private resizeManager!: ResizeManager
+
     private observer!: ResizeObserver
 
     constructor(options: RectflowOptions) {
@@ -22,11 +18,8 @@ export class Rectflow {
 
     private process() {
         try {
-            this.areaRenderer = new AreaRenderer(this.context)
-            this.resizeManager = new ResizeManager(this.context)
-
             this.context.onLayoutChange = () => {
-                this.areaRenderer.applyLayout(this.context.computedLayout!)
+                this.context.areaRenderer.apply()
             }
 
             this.applyCurrentLayout()
@@ -36,22 +29,8 @@ export class Rectflow {
     }
 
     private applyCurrentLayout() {
-        this.areaRenderer.applyLayout(this.context.computedLayout)
-    }
-
-    private handleError(err: unknown) {
-        if (this.options.strict) throw err
-
-        if (err instanceof RectflowError) {
-            console.error(err.message, err.code)
-        } else {
-            console.error('[Rectflow] Unknown error', err)
-        }
-    }
-
-    public registerArea(area: string, elem: HTMLElement) {
-        this.areaRenderer.registerArea(area, elem)
-        // this.applyCurrentLayout()
+        this.context.areaRenderer.apply()
+        this.context.resizeManager.apply()
     }
 
     public setLayout(layout: LayoutConfig) {
@@ -64,11 +43,21 @@ export class Rectflow {
     }
 
     public getArea(area: string) {
-        return this.areaRenderer.getArea(area)
+        return this.context.areaRenderer.getAreaElement(area)
     }
 
     public destroy() {
         this.observer.disconnect()
-        this.areaRenderer.clear()
+        this.context.areaRenderer.clear()
+    }
+
+    private handleError(err: unknown) {
+        if (this.options.strict) throw err
+
+        if (err instanceof RectflowError) {
+            console.error(err.message, err.code)
+        } else {
+            console.error('[Rectflow] Unknown error', err)
+        }
     }
 }

@@ -1,17 +1,21 @@
 import { AreaTopology } from './AreaTopology'
 import { LayoutEngine } from './LayoutEngine'
+import { AreaRenderer } from './AreaRenderer'
+import { ResizeManager } from './ResizeManager'
 import { assertContainer } from '../helper/assertContainer'
 import { assertLayoutConfig } from '../helper/assertLayoutConfig'
 import type { RectflowOptions, ResolvedRectflowOptions } from '../types/RectflowOptions'
-import type { ComputedLayout, LayoutConfig } from '../types/LayoutConfig'
+import type { LayoutConfig } from '../types/LayoutConfig'
+import type { Resolved } from '../types/Resolved'
 
 export class RectflowContext {
-    public readonly options: ResolvedRectflowOptions
+    public readonly options: Resolved<ResolvedRectflowOptions>
     public readonly areaTopology: AreaTopology
     public readonly layoutEngine: LayoutEngine
+    public readonly areaRenderer: AreaRenderer
+    public readonly resizeManager: ResizeManager
 
     public onLayoutChange?: () => void
-    public computedLayout: ComputedLayout
 
     constructor(rawOptions: RectflowOptions) {
         const resolved = this.resolveOptions(rawOptions)
@@ -20,9 +24,9 @@ export class RectflowContext {
         this.initContainerStyle()
 
         this.areaTopology = new AreaTopology(resolved.layout.areas)
-
         this.layoutEngine = new LayoutEngine(resolved.layout, this.areaTopology.boxes, resolved.container)
-        this.computedLayout = this.layoutEngine.computedLayout
+        this.areaRenderer = new AreaRenderer(this)
+        this.resizeManager = new ResizeManager(this)
     }
 
     private resolveOptions(options: RectflowOptions): ResolvedRectflowOptions {
@@ -61,7 +65,6 @@ export class RectflowContext {
 
     private initContainerStyle() {
         const { container } = this.options
-
         container.style.position = 'absolute'
     }
 }

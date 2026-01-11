@@ -1,5 +1,5 @@
 import type { ComputedLayout } from '../types/LayoutConfig'
-import { Area } from './Area'
+import { Area } from './AreaView'
 
 export class AreaStore {
     private areas = new Map<string, Area>()

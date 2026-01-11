@@ -19,7 +19,7 @@ type AreaName = string
 
 type AxisKey = 'rowStart' | 'rowEnd' | 'colStart' | 'colEnd'
 
-type BoundaryGroup = {
+export type BoundaryGroup = {
     first: AreaName[]
     second: AreaName[]
 }
@@ -69,20 +69,6 @@ export class AreaTopology {
                 box.colEnd = Math.max(box.colEnd, cell.col)
             }
         }
-    }
-
-    private isVerticalNeighbor(a: AreaBox, b: AreaBox): boolean {
-        return (
-            (a.colEnd + 1 === b.colStart || b.colEnd + 1 === a.colStart) &&
-            !(a.rowEnd < b.rowStart || b.rowEnd < a.rowStart)
-        )
-    }
-
-    private isHorizontalNeighbor(a: AreaBox, b: AreaBox): boolean {
-        return (
-            (a.rowEnd + 1 === b.rowStart || b.rowEnd + 1 === a.rowStart) &&
-            !(a.colEnd < b.colStart || b.colEnd < a.colStart)
-        )
     }
 
     public computeBoundaries(
@@ -139,38 +125,11 @@ export class AreaTopology {
         return result
     }
 
-    computeHorizontalBoundaries(boxes: AreaBox[]) {
+    public computeHorizontalBoundaries(boxes: AreaBox[]) {
         this.horizontalBoundary = this.computeBoundaries(boxes, 'rowEnd', 'rowStart', 'colStart', 'colEnd')
     }
 
-    computeVerticalBoundaries(boxes: AreaBox[]) {
+    public computeVerticalBoundaries(boxes: AreaBox[]) {
         this.verticalBoundary = this.computeBoundaries(boxes, 'colEnd', 'colStart', 'rowStart', 'rowEnd')
-    }
-
-    public resolveHandle(handle: ResizeHandle): ResolvedResizeHandle {
-        const a = this.boxes[handle.between[0]]
-        const b = this.boxes[handle.between[1]]
-
-        if (!a || !b) {
-            throw new Error('Invalid area name in resize handle')
-        }
-
-        if (this.isVerticalNeighbor(a, b)) {
-            return {
-                handle,
-                direction: 'vertical',
-                gridLine: Math.max(a.colEnd, b.colEnd),
-            }
-        }
-
-        if (this.isHorizontalNeighbor(a, b)) {
-            return {
-                handle,
-                direction: 'horizontal',
-                gridLine: Math.max(a.rowEnd, b.rowEnd),
-            }
-        }
-
-        throw new Error(`Areas "${a.area}" and "${b.area}" do not share a border`)
     }
 }
