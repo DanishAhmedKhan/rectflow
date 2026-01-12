@@ -13,6 +13,7 @@ export class AreaRenderer {
             const rect = computedRect[name]
             const areaView = new AreaView(name, rect)
             this.areas[name] = areaView
+            areaView.elem.style.overflow = 'hidden'
             areaView.elem.innerHTML = name
         }
     }

@@ -1,10 +1,11 @@
-import type { Rect } from './Rect'
 import { RectView } from './RectView'
+import type { Rect } from './Rect'
+import type { BoundaryGroup } from './AreaTopology'
 
-type GutterOrientation = 'horizontal' | 'vertical'
+type GutterDirection = 'horizontal' | 'vertical'
 
 export class GutterView extends RectView {
-    constructor(private orientation: GutterOrientation, rect: Rect) {
+    constructor(public readonly direction: GutterDirection, public readonly boundary: BoundaryGroup, rect: Rect) {
         super(rect)
     }
 }

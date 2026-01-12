@@ -1,9 +1,10 @@
 import { Rect } from './Rect'
 import { GutterView } from './GutterView'
-import type { ResizeHandle } from '../types/ResizeTypes'
+import type { AreaName, ResizeHandle } from '../types/ResizeTypes'
 import type { AreaTopology, BoundaryGroup } from './AreaTopology'
 import type { RectflowContext } from './RectflowContext'
 import type { RectOption } from '../types/RectOption'
+import type { AreaView } from './AreaView'
 
 export class ResizeManager {
     private areaTopology: AreaTopology
@@ -11,6 +12,9 @@ export class ResizeManager {
     private handles: ResizeHandle[]
     private gutterSize: number
     private layoutGap: number
+
+    private horizontalGutters: GutterView[] = []
+    private verticalGutters: GutterView[] = []
 
     constructor(private context: RectflowContext) {
         this.areaTopology = context.areaTopology
@@ -22,24 +26,6 @@ export class ResizeManager {
     public apply() {
         this.createHorizontalGutters()
         this.createVerticalGutters()
-    }
-
-    private computeHorizontalGutterSpan(boundary: BoundaryGroup) {
-        const areaNames = boundary.first
-
-        let minX = Infinity
-        let maxX = -Infinity
-
-        for (const name of areaNames) {
-            const rect = this.context.layoutEngine.computedRect[name]
-            minX = Math.min(minX, rect.x)
-            maxX = Math.max(maxX, rect.x + rect.width)
-        }
-
-        return {
-            x: minX,
-            width: maxX - minX,
-        }
     }
 
     private getBoundary(handle: ResizeHandle, boundaries: BoundaryGroup[]): BoundaryGroup | undefined {
@@ -59,14 +45,15 @@ export class ResizeManager {
             const boundary = this.getBoundary(handle, this.areaTopology.horizontalBoundary)
             if (!boundary) continue
 
-            let rectOption = { ...this.computeHorizontalGutterSpan(boundary) } as RectOption
+            let rectOption = { ...this.computeGutterSpan(boundary, 'x') } as RectOption
             const areaName = boundary.first[0]
             const rect = this.context.layoutEngine.computedRect[areaName]
 
             rectOption.y = rect.y + rect.height + this.layoutGap / 2 - this.gutterSize / 2
             rectOption.height = this.gutterSize
 
-            const gutterView = new GutterView('horizontal', new Rect(rectOption))
+            const gutterView = new GutterView('horizontal', boundary, new Rect(rectOption))
+            this.horizontalGutters.push(gutterView)
             gutterView.style({
                 background: 'blue',
                 cursor: 'row-resize',
@@ -78,44 +65,26 @@ export class ResizeManager {
     }
 
     private attachHorizontalDrag(gutterView: GutterView, boundary: BoundaryGroup) {
-        let startY = 0
+        let lastY = 0
 
         const onMouseMove = (e: MouseEvent) => {
-            let dy = startY - e.clientY
-            startY = e.clientY
+            let dy = this.clampResizeDelta(lastY - e.clientY, boundary, 'height')
+            lastY = e.clientY
 
-            if (dy > 0) {
-                for (const name of boundary.first) {
-                    const v = this.context.areaRenderer.getView(name)!
-                    dy = Math.min(dy, v.rect.height)
-                }
-            } else if (dy < 0) {
-                for (const name of boundary.second) {
-                    const v = this.context.areaRenderer.getView(name)!
-                    dy = Math.max(dy, -v.rect.height)
-                }
-            }
-
-            boundary.first.forEach((name) => {
-                const v = this.context.areaRenderer.getView(name)!
-                dy > 0 ? v.rect.shrinkFromBottom(dy) : v.rect.growFromBottom(-dy)
-                v.apply()
+            this.applyResizeToBoundarySide(boundary.first, (view) => {
+                dy > 0 ? view.rect.shrinkFromBottom(dy) : view.rect.growFromBottom(-dy)
             })
 
-            boundary.second.forEach((name) => {
-                const v = this.context.areaRenderer.getView(name)!
-                dy > 0 ? v.rect.growFromTop(dy) : v.rect.shrinkFromTop(-dy)
-                v.apply()
+            this.applyResizeToBoundarySide(boundary.second, (view) => {
+                dy > 0 ? view.rect.growFromTop(dy) : view.rect.shrinkFromTop(-dy)
             })
 
-            const rect = this.context.areaRenderer.getView(boundary.first[0])?.rect!
-            gutterView.rect.y = rect.y + rect.height + this.layoutGap / 2 - this.gutterSize / 2
-            gutterView.apply()
+            this.relayoutGutters()
         }
 
         const onMouseDown = (e: MouseEvent) => {
             e.preventDefault()
-            startY = e.clientY
+            lastY = e.clientY
 
             document.addEventListener('mousemove', onMouseMove)
             document.addEventListener('mouseup', onMouseUp)
@@ -129,36 +98,19 @@ export class ResizeManager {
         gutterView.elem.addEventListener('mousedown', onMouseDown)
     }
 
-    private computeVerticalGutterSpan(boundary: BoundaryGroup) {
-        const areaNames = boundary.first
-
-        let minY = Infinity
-        let maxY = -Infinity
-
-        for (const name of areaNames) {
-            const rect = this.context.layoutEngine.computedRect[name]
-            minY = Math.min(minY, rect.y)
-            maxY = Math.max(maxY, rect.y + rect.height)
-        }
-
-        return {
-            y: minY,
-            height: maxY - minY,
-        }
-    }
-
     private createVerticalGutters() {
         for (const handle of this.handles) {
             const boundary = this.getBoundary(handle, this.areaTopology.verticalBoundary)
             if (!boundary) continue
 
-            let rectOption = { ...this.computeVerticalGutterSpan(boundary) } as RectOption
+            let rectOption = { ...this.computeGutterSpan(boundary, 'y') } as RectOption
             const areaName = boundary.first[0]
             const rect = this.context.layoutEngine.computedRect[areaName]
             rectOption.x = rect.x + rect.width + this.layoutGap / 2 - this.gutterSize / 2
             rectOption.width = this.gutterSize
 
-            const gutterView = new GutterView('horizontal', new Rect(rectOption))
+            const gutterView = new GutterView('horizontal', boundary, new Rect(rectOption))
+            this.verticalGutters.push(gutterView)
             gutterView.style({
                 background: 'red',
                 cursor: 'col-resize',
@@ -170,44 +122,26 @@ export class ResizeManager {
     }
 
     private attachVerticalDrag(gutterView: GutterView, boundary: BoundaryGroup) {
-        let startX = 0
+        let lastX = 0
 
         const onMouseMove = (e: MouseEvent) => {
-            let dx = startX - e.clientX
-            startX = e.clientX
+            let dx = this.clampResizeDelta(lastX - e.clientX, boundary, 'width')
+            lastX = e.clientX
 
-            if (dx > 0) {
-                for (const name of boundary.first) {
-                    const v = this.context.areaRenderer.getView(name)!
-                    dx = Math.min(dx, v.rect.width)
-                }
-            } else if (dx < 0) {
-                for (const name of boundary.second) {
-                    const v = this.context.areaRenderer.getView(name)!
-                    dx = Math.max(dx, -v.rect.width)
-                }
-            }
-
-            boundary.first.forEach((name) => {
-                const v = this.context.areaRenderer.getView(name)!
-                dx > 0 ? v.rect.shrinkFromRight(dx) : v.rect.growFromRight(-dx)
-                v.apply()
+            this.applyResizeToBoundarySide(boundary.first, (view) => {
+                dx > 0 ? view.rect.shrinkFromRight(dx) : view.rect.growFromRight(-dx)
             })
 
-            boundary.second.forEach((name) => {
-                const v = this.context.areaRenderer.getView(name)!
-                dx > 0 ? v.rect.growFromLeft(dx) : v.rect.shrinkFromLeft(-dx)
-                v.apply()
+            this.applyResizeToBoundarySide(boundary.second, (view) => {
+                dx > 0 ? view.rect.growFromLeft(dx) : view.rect.shrinkFromLeft(-dx)
             })
 
-            const rect = this.context.areaRenderer.getView(boundary.first[0])?.rect!
-            gutterView.rect.x = rect.x + rect.width + this.layoutGap / 2 - this.gutterSize / 2
-            gutterView.apply()
+            this.relayoutGutters()
         }
 
         const onMouseDown = (e: MouseEvent) => {
             e.preventDefault()
-            startX = e.clientX
+            lastX = e.clientX
 
             document.addEventListener('mousemove', onMouseMove)
             document.addEventListener('mouseup', onMouseUp)
@@ -219,5 +153,78 @@ export class ResizeManager {
         }
 
         gutterView.elem.addEventListener('mousedown', onMouseDown)
+    }
+
+    private computeGutterSpan(
+        boundary: BoundaryGroup,
+        axis: 'x' | 'y',
+    ): { x: number; width: number } | { y: number; height: number } {
+        const areaNames = boundary.first
+
+        let min = Infinity
+        let max = -Infinity
+
+        for (const name of areaNames) {
+            const rect = this.context.layoutEngine.computedRect[name]
+
+            if (axis === 'x') {
+                min = Math.min(min, rect.x)
+                max = Math.max(max, rect.x + rect.width)
+            } else {
+                min = Math.min(min, rect.y)
+                max = Math.max(max, rect.y + rect.height)
+            }
+        }
+
+        return axis === 'x' ? { x: min, width: max - min } : { y: min, height: max - min }
+    }
+
+    private relayoutGutters() {
+        for (const g of this.horizontalGutters) {
+            const boundary = g.boundary
+            const span = this.computeGutterSpan(boundary, 'x') as { x: number; width: number }
+            g.rect.x = span.x
+            g.rect.width = span.width
+
+            const ref = this.context.areaRenderer.getView(boundary.first[0])!.rect
+            g.rect.y = ref.y + ref.height + this.layoutGap / 2 - this.gutterSize / 2
+
+            g.apply()
+        }
+
+        for (const g of this.verticalGutters) {
+            const boundary = g.boundary
+            const span = this.computeGutterSpan(boundary, 'y') as { y: number; height: number }
+            g.rect.y = span.y
+            g.rect.height = span.height
+
+            const ref = this.context.areaRenderer.getView(boundary.first[0])!.rect
+            g.rect.x = ref.x + ref.width + this.layoutGap / 2 - this.gutterSize / 2
+
+            g.apply()
+        }
+    }
+
+    public clampResizeDelta(delta: number, boundary: BoundaryGroup, dimension: 'width' | 'height'): number {
+        if (delta > 0) {
+            for (const name of boundary.first) {
+                const v = this.context.areaRenderer.getView(name)!
+                delta = Math.min(delta, v.rect[dimension])
+            }
+        } else if (delta < 0) {
+            for (const name of boundary.second) {
+                const v = this.context.areaRenderer.getView(name)!
+                delta = Math.max(delta, -v.rect[dimension])
+            }
+        }
+        return delta
+    }
+
+    private applyResizeToBoundarySide(boundarySide: AreaName[], resize: (view: AreaView) => void) {
+        boundarySide.forEach((name) => {
+            const view = this.context.areaRenderer.getView(name)!
+            resize(view)
+            view.apply()
+        })
     }
 }
