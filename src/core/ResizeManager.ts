@@ -7,6 +7,8 @@ import type { RectOption } from '../types/RectOption'
 
 export class ResizeManager {
     private areaTopology: AreaTopology
+
+    private handles: ResizeHandle[]
     private gutterSize: number
     private layoutGap: number
 
@@ -14,6 +16,7 @@ export class ResizeManager {
         this.areaTopology = context.areaTopology
         this.gutterSize = context.options.layout.resize?.gutter!
         this.layoutGap = context.options.layout.gap ?? 0
+        this.handles = this.context.options.layout.resize?.handles ?? []
     }
 
     public apply() {
@@ -52,15 +55,14 @@ export class ResizeManager {
     }
 
     private createHorizontalGutters() {
-        const handles = this.context.options.layout.resize?.handles ?? []
-
-        for (const handle of handles) {
+        for (const handle of this.handles) {
             const boundary = this.getBoundary(handle, this.areaTopology.horizontalBoundary)
             if (!boundary) continue
 
             let rectOption = { ...this.computeHorizontalGutterSpan(boundary) } as RectOption
-            const areaName = handle.between[0]
+            const areaName = boundary.first[0]
             const rect = this.context.layoutEngine.computedRect[areaName]
+
             rectOption.y = rect.y + rect.height + this.layoutGap / 2 - this.gutterSize / 2
             rectOption.height = this.gutterSize
 
@@ -79,19 +81,31 @@ export class ResizeManager {
         let startY = 0
 
         const onMouseMove = (e: MouseEvent) => {
-            const dy = startY - e.clientY
+            let dy = startY - e.clientY
             startY = e.clientY
 
-            boundary.first.forEach((areaName) => {
-                const areView = this.context.areaRenderer.getView(areaName)
-                areView?.rect.shrinkFromBottom(dy)
-                areView?.apply()
+            if (dy > 0) {
+                for (const name of boundary.first) {
+                    const v = this.context.areaRenderer.getView(name)!
+                    dy = Math.min(dy, v.rect.height)
+                }
+            } else if (dy < 0) {
+                for (const name of boundary.second) {
+                    const v = this.context.areaRenderer.getView(name)!
+                    dy = Math.max(dy, -v.rect.height)
+                }
+            }
+
+            boundary.first.forEach((name) => {
+                const v = this.context.areaRenderer.getView(name)!
+                dy > 0 ? v.rect.shrinkFromBottom(dy) : v.rect.growFromBottom(-dy)
+                v.apply()
             })
 
-            boundary.second.forEach((areaName) => {
-                const areView = this.context.areaRenderer.getView(areaName)
-                areView?.rect.growFromTop(dy)
-                areView?.apply()
+            boundary.second.forEach((name) => {
+                const v = this.context.areaRenderer.getView(name)!
+                dy > 0 ? v.rect.growFromTop(dy) : v.rect.shrinkFromTop(-dy)
+                v.apply()
             })
 
             const rect = this.context.areaRenderer.getView(boundary.first[0])?.rect!
@@ -134,16 +148,12 @@ export class ResizeManager {
     }
 
     private createVerticalGutters() {
-        const handles = this.context.options.layout.resize?.handles ?? []
-
-        for (const handle of handles) {
+        for (const handle of this.handles) {
             const boundary = this.getBoundary(handle, this.areaTopology.verticalBoundary)
             if (!boundary) continue
 
-            console.log(boundary)
-
             let rectOption = { ...this.computeVerticalGutterSpan(boundary) } as RectOption
-            const areaName = handle.between[0]
+            const areaName = boundary.first[0]
             const rect = this.context.layoutEngine.computedRect[areaName]
             rectOption.x = rect.x + rect.width + this.layoutGap / 2 - this.gutterSize / 2
             rectOption.width = this.gutterSize
@@ -163,19 +173,31 @@ export class ResizeManager {
         let startX = 0
 
         const onMouseMove = (e: MouseEvent) => {
-            const dx = startX - e.clientX
+            let dx = startX - e.clientX
             startX = e.clientX
 
-            boundary.first.forEach((areaName) => {
-                const areView = this.context.areaRenderer.getView(areaName)
-                areView?.rect.shrinkFromRight(dx)
-                areView?.apply()
+            if (dx > 0) {
+                for (const name of boundary.first) {
+                    const v = this.context.areaRenderer.getView(name)!
+                    dx = Math.min(dx, v.rect.width)
+                }
+            } else if (dx < 0) {
+                for (const name of boundary.second) {
+                    const v = this.context.areaRenderer.getView(name)!
+                    dx = Math.max(dx, -v.rect.width)
+                }
+            }
+
+            boundary.first.forEach((name) => {
+                const v = this.context.areaRenderer.getView(name)!
+                dx > 0 ? v.rect.shrinkFromRight(dx) : v.rect.growFromRight(-dx)
+                v.apply()
             })
 
-            boundary.second.forEach((areaName) => {
-                const areView = this.context.areaRenderer.getView(areaName)
-                areView?.rect.growFromLeft(dx)
-                areView?.apply()
+            boundary.second.forEach((name) => {
+                const v = this.context.areaRenderer.getView(name)!
+                dx > 0 ? v.rect.growFromLeft(dx) : v.rect.shrinkFromLeft(-dx)
+                v.apply()
             })
 
             const rect = this.context.areaRenderer.getView(boundary.first[0])?.rect!
