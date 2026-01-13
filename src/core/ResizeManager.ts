@@ -60,42 +60,17 @@ export class ResizeManager {
             })
             gutterView.mount(this.context.options.container)
 
-            this.attachHorizontalDrag(gutterView, boundary)
-        }
-    }
-
-    private attachHorizontalDrag(gutterView: GutterView, boundary: BoundaryGroup) {
-        let lastY = 0
-
-        const onMouseMove = (e: MouseEvent) => {
-            let dy = this.clampResizeDelta(lastY - e.clientY, boundary, 'height')
-            lastY = e.clientY
-
-            this.applyResizeToBoundarySide(boundary.first, (view) => {
-                dy > 0 ? view.rect.shrinkFromBottom(dy) : view.rect.growFromBottom(-dy)
+            this.attachGutterDrag(gutterView, boundary, {
+                getPos: (e) => e.clientY,
+                dimension: 'height',
+                applyFirst: (view, dy) => {
+                    dy > 0 ? view.rect.shrinkFromBottom(dy) : view.rect.growFromBottom(-dy)
+                },
+                applySecond: (view, dy) => {
+                    dy > 0 ? view.rect.growFromTop(dy) : view.rect.shrinkFromTop(-dy)
+                },
             })
-
-            this.applyResizeToBoundarySide(boundary.second, (view) => {
-                dy > 0 ? view.rect.growFromTop(dy) : view.rect.shrinkFromTop(-dy)
-            })
-
-            this.relayoutGutters()
         }
-
-        const onMouseDown = (e: MouseEvent) => {
-            e.preventDefault()
-            lastY = e.clientY
-
-            document.addEventListener('mousemove', onMouseMove)
-            document.addEventListener('mouseup', onMouseUp)
-        }
-
-        const onMouseUp = () => {
-            document.removeEventListener('mousemove', onMouseMove)
-            document.removeEventListener('mouseup', onMouseUp)
-        }
-
-        gutterView.elem.addEventListener('mousedown', onMouseDown)
     }
 
     private createVerticalGutters() {
@@ -117,31 +92,45 @@ export class ResizeManager {
             })
             gutterView.mount(this.context.options.container)
 
-            this.attachVerticalDrag(gutterView, boundary)
+            this.attachGutterDrag(gutterView, boundary, {
+                getPos: (e) => e.clientX,
+                dimension: 'width',
+                applyFirst: (view, dx) => {
+                    dx > 0 ? view.rect.shrinkFromRight(dx) : view.rect.growFromRight(-dx)
+                },
+                applySecond: (view, dx) => {
+                    dx > 0 ? view.rect.growFromLeft(dx) : view.rect.shrinkFromLeft(-dx)
+                },
+            })
         }
     }
 
-    private attachVerticalDrag(gutterView: GutterView, boundary: BoundaryGroup) {
-        let lastX = 0
+    private attachGutterDrag(
+        gutterView: GutterView,
+        boundary: BoundaryGroup,
+        config: {
+            getPos: (e: MouseEvent) => number
+            dimension: 'width' | 'height'
+            applyFirst: (view: AreaView, delta: number) => void
+            applySecond: (view: AreaView, delta: number) => void
+        },
+    ) {
+        let lastPos = 0
 
         const onMouseMove = (e: MouseEvent) => {
-            let dx = this.clampResizeDelta(lastX - e.clientX, boundary, 'width')
-            lastX = e.clientX
+            const delta = this.clampResizeDelta(lastPos - config.getPos(e), boundary, config.dimension)
 
-            this.applyResizeToBoundarySide(boundary.first, (view) => {
-                dx > 0 ? view.rect.shrinkFromRight(dx) : view.rect.growFromRight(-dx)
-            })
+            lastPos = config.getPos(e)
 
-            this.applyResizeToBoundarySide(boundary.second, (view) => {
-                dx > 0 ? view.rect.growFromLeft(dx) : view.rect.shrinkFromLeft(-dx)
-            })
+            this.applyResizeToBoundarySide(boundary.first, (view) => config.applyFirst(view, delta))
+            this.applyResizeToBoundarySide(boundary.second, (view) => config.applySecond(view, delta))
 
             this.relayoutGutters()
         }
 
         const onMouseDown = (e: MouseEvent) => {
             e.preventDefault()
-            lastX = e.clientX
+            lastPos = config.getPos(e)
 
             document.addEventListener('mousemove', onMouseMove)
             document.addEventListener('mouseup', onMouseUp)
