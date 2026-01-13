@@ -1,35 +1,33 @@
-import type { ComputedRect, LayoutConfig } from '../types/LayoutConfig'
-import type { AreaName } from '../types/ResizeTypes'
-import type { AreaBox } from './AreaTopology'
 import { Rect } from './Rect'
+import type { RectflowContext } from './RectflowContext'
+import type { ComputedRect, LayoutConfig } from '../types/LayoutConfig'
 
 export class LayoutEngine {
     public computedRect: ComputedRect = {}
 
-    constructor(
-        private layout: LayoutConfig,
-        private boxes: Record<AreaName, AreaBox>,
-        private container: HTMLElement,
-    ) {
+    constructor(private context: RectflowContext) {
         this.calculate()
     }
 
     public setLayout(layout: LayoutConfig) {
-        this.layout = layout
+        this.context.options.layout = layout
         this.calculate()
     }
 
     public calculate() {
-        const gap = this.layout.gap ?? 0
+        const container = this.context.options.container
+        const layout = this.context.options.layout
+        const boxes = this.context.areaTopology.boxes
+        const gap = layout.gap ?? 0
 
-        const rows = this.parseTracks(this.layout.rows, this.container.clientHeight, gap)
-        const cols = this.parseTracks(this.layout.columns, this.container.clientWidth, gap)
+        const rows = this.parseTracks(layout.rows, container.clientHeight, gap)
+        const cols = this.parseTracks(layout.columns, container.clientWidth, gap)
 
         const rowOffsets = this.accumulate(rows, gap)
         const colOffsets = this.accumulate(cols, gap)
 
-        for (const name in this.boxes) {
-            const span = this.boxes[name]
+        for (const name in boxes) {
+            const span = boxes[name]
 
             const x = colOffsets[span.colStart]
             const y = rowOffsets[span.rowStart]

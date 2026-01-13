@@ -15,6 +15,7 @@ export class AreaRenderer {
             this.areas[name] = areaView
             areaView.elem.style.overflow = 'hidden'
             areaView.elem.innerHTML = name
+            areaView.elem.dataset.rectflowArea = name
         }
     }
 

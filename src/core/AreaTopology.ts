@@ -1,5 +1,5 @@
 import type { LayoutAreas } from '../types/LayoutConfig'
-import type { ResizeHandle, ResolvedResizeHandle } from '../types/ResizeTypes'
+import type { RectflowContext } from './RectflowContext'
 
 export type Cell = {
     area: AreaName
@@ -25,12 +25,15 @@ export type BoundaryGroup = {
 }
 
 export class AreaTopology {
+    private readonly layoutAreas
+
     public cells: Cell[] = []
     public boxes: Record<AreaName, AreaBox> = {}
     public horizontalBoundary!: BoundaryGroup[]
     public verticalBoundary!: BoundaryGroup[]
 
-    constructor(private layoutAreas: LayoutAreas) {
+    constructor(context: RectflowContext) {
+        this.layoutAreas = context.options.layout.areas
         this.buildCells()
         this.calculateBoxes()
         this.computeHorizontalBoundaries(Object.values(this.boxes))

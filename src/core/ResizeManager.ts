@@ -1,6 +1,6 @@
 import { Rect } from './Rect'
 import { GutterView } from './GutterView'
-import type { AreaName, ResizeHandle } from '../types/ResizeTypes'
+import type { AreaName, GutterConfig, ResizeHandle } from '../types/ResizeTypes'
 import type { AreaTopology, BoundaryGroup } from './AreaTopology'
 import type { RectflowContext } from './RectflowContext'
 import type { RectOption } from '../types/RectOption'
@@ -10,7 +10,7 @@ export class ResizeManager {
     private areaTopology: AreaTopology
 
     private handles: ResizeHandle[]
-    private gutterSize: number
+    private gutter: GutterConfig
     private layoutGap: number
 
     private horizontalGutters: GutterView[] = []
@@ -18,7 +18,7 @@ export class ResizeManager {
 
     constructor(private context: RectflowContext) {
         this.areaTopology = context.areaTopology
-        this.gutterSize = context.options.layout.resize?.gutter!
+        this.gutter = context.options.layout.resize?.gutter! as GutterConfig
         this.layoutGap = context.options.layout.gap ?? 0
         this.handles = this.context.options.layout.resize?.handles ?? []
     }
@@ -49,8 +49,8 @@ export class ResizeManager {
             const areaName = boundary.first[0]
             const rect = this.context.layoutEngine.computedRect[areaName]
 
-            rectOption.y = rect.y + rect.height + this.layoutGap / 2 - this.gutterSize / 2
-            rectOption.height = this.gutterSize
+            rectOption.y = rect.y + rect.height + this.layoutGap / 2 - this.gutter.size / 2
+            rectOption.height = this.gutter.size
 
             const gutterView = new GutterView('horizontal', boundary, new Rect(rectOption))
             this.horizontalGutters.push(gutterView)
@@ -81,8 +81,8 @@ export class ResizeManager {
             let rectOption = { ...this.computeGutterSpan(boundary, 'y') } as RectOption
             const areaName = boundary.first[0]
             const rect = this.context.layoutEngine.computedRect[areaName]
-            rectOption.x = rect.x + rect.width + this.layoutGap / 2 - this.gutterSize / 2
-            rectOption.width = this.gutterSize
+            rectOption.x = rect.x + rect.width + this.layoutGap / 2 - this.gutter.size / 2
+            rectOption.width = this.gutter.size
 
             const gutterView = new GutterView('horizontal', boundary, new Rect(rectOption))
             this.verticalGutters.push(gutterView)
@@ -176,7 +176,7 @@ export class ResizeManager {
             g.rect.width = span.width
 
             const ref = this.context.areaRenderer.getView(boundary.first[0])!.rect
-            g.rect.y = ref.y + ref.height + this.layoutGap / 2 - this.gutterSize / 2
+            g.rect.y = ref.y + ref.height + this.layoutGap / 2 - this.gutter.size / 2
 
             g.apply()
         }
@@ -188,7 +188,7 @@ export class ResizeManager {
             g.rect.height = span.height
 
             const ref = this.context.areaRenderer.getView(boundary.first[0])!.rect
-            g.rect.x = ref.x + ref.width + this.layoutGap / 2 - this.gutterSize / 2
+            g.rect.x = ref.x + ref.width + this.layoutGap / 2 - this.gutter.size / 2
 
             g.apply()
         }

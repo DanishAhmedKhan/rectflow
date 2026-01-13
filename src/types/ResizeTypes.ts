@@ -1,5 +1,3 @@
-import type { BoundaryGroup } from '../core/AreaTopology'
-
 export type AreaName = string
 export type ResizeDirection = 'horizontal' | 'vertical'
 
@@ -9,9 +7,18 @@ export interface ResizeHandle {
     max?: number
 }
 
+export interface GutterConfig {
+    size: number
+    style?: {
+        color?: string
+        hoverColor?: string
+        activeColor?: string
+    }
+}
+
 export interface ResizeConfig {
     handles: ResizeHandle[]
-    gutter: number
+    gutter: number | GutterConfig
 }
 
 export interface ResolvedResizeHandle {
@@ -23,11 +30,4 @@ export interface ResolvedResizeHandle {
 export interface SizeConstraint {
     min?: number
     max?: number
-}
-
-export type GutterDirection = 'horizontal' | 'vertical'
-
-export interface GutterConfig {
-    direction: GutterDirection
-    boundary: BoundaryGroup
 }

@@ -2,14 +2,16 @@ import { AreaTopology } from './AreaTopology'
 import { LayoutEngine } from './LayoutEngine'
 import { AreaRenderer } from './AreaRenderer'
 import { ResizeManager } from './ResizeManager'
+import { deepMerge } from '../helper/deepMerge'
 import { assertContainer } from '../helper/assertContainer'
 import { assertLayoutConfig } from '../helper/assertLayoutConfig'
+import { RECTFLOW_DEFAULTS } from '../defaults/rectflowDefaults'
 import type { RectflowOptions, ResolvedRectflowOptions } from '../types/RectflowOptions'
-import type { LayoutConfig } from '../types/LayoutConfig'
 import type { Resolved } from '../types/Resolved'
 
 export class RectflowContext {
     public readonly options: Resolved<ResolvedRectflowOptions>
+
     public readonly areaTopology: AreaTopology
     public readonly layoutEngine: LayoutEngine
     public readonly areaRenderer: AreaRenderer
@@ -23,44 +25,50 @@ export class RectflowContext {
 
         this.initContainerStyle()
 
-        this.areaTopology = new AreaTopology(resolved.layout.areas)
-        this.layoutEngine = new LayoutEngine(resolved.layout, this.areaTopology.boxes, resolved.container)
+        this.areaTopology = new AreaTopology(this)
+        this.layoutEngine = new LayoutEngine(this)
         this.areaRenderer = new AreaRenderer(this)
         this.resizeManager = new ResizeManager(this)
     }
 
     private resolveOptions(options: RectflowOptions): ResolvedRectflowOptions {
-        const container = this.normalizeContainer(options.container)
-        const layout = this.normalizeLayout(options.layout)
+        this.normalizeContainer(options)
+        this.normalizeLayout(options)
+        this.normalizeAreas(options)
+        this.normalizeGutter(options)
 
-        assertContainer(container)
-        assertLayoutConfig(options.layout)
+        const resolvedOptions = deepMerge(RECTFLOW_DEFAULTS, options as ResolvedRectflowOptions)
 
-        return {
-            container,
-            layout,
-            strict: options.strict ?? true,
-        }
+        assertContainer(resolvedOptions.container)
+        assertLayoutConfig(resolvedOptions.layout)
+
+        return resolvedOptions
     }
 
-    private normalizeContainer(container: HTMLElement | string | null): HTMLElement {
+    private normalizeContainer(options: RectflowOptions) {
+        const container = options.container
+
         if (typeof container === 'string') {
-            container = document.querySelector<HTMLElement>(container)
+            options.container = document.querySelector<HTMLElement>(container)
         }
-
-        assertContainer(container)
-        return container
     }
 
-    private normalizeLayout(layout: LayoutConfig): LayoutConfig {
-        if (!layout.gap) layout.gap = 0
-        layout.areas = this.normalizeAreas(layout.areas)
+    private normalizeLayout(options: RectflowOptions) {
+        const layout = options.layout
 
-        return layout
+        if (!layout.gap) options.layout.gap = 0
     }
 
-    private normalizeAreas(areas: string[][]): string[][] {
-        return areas.map((row) => (row.length === 1 ? row[0].trim().split(/\s+/) : row))
+    private normalizeAreas(options: RectflowOptions) {
+        const areas = options.layout.areas
+        options.layout.areas = areas.map((row) => (row.length === 1 ? row[0].trim().split(/\s+/) : row))
+    }
+
+    private normalizeGutter(options: RectflowOptions) {
+        if (!options.layout.resize) return
+        const gutter = options.layout.resize.gutter
+
+        if (typeof gutter === 'number') options.layout.resize.gutter = { size: 6 }
     }
 
     private initContainerStyle() {

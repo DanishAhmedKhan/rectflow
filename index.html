@@ -12,7 +12,7 @@
             box-sizing: border-box;
         }
 
-        .main {
+        #container {
             width: 100vw;
             height: 100vh;
         }
@@ -20,12 +20,12 @@
 </head>
 
 <body>
-    <div class="main"></div>
+    <div id="container"></div>
 
     <script type="module">
         import { Rectflow } from './src/index'
 
-        const mainElem = document.querySelector('.main')
+        const mainElem = document.getElementById('container')
 
         const rectflow = new Rectflow({
             container: mainElem,
@@ -51,10 +51,21 @@
                         { between: ['L', 'K'] },
                         { between: ['H', 'L'] },
                     ],
-                    gutter: 6,
+                    gutter: {
+                        size: 4,
+                        style: {
+                            color: 'transparent',
+                            hoverColor: 'red',
+                            activeColor: 'red',
+                        }
+                    },
                 }
             }
         })
+
+        const areaA = rectflow.getArea('A')
+        areaA.innerHTML = 'Heading'
+
     </script>
 </body>
 
