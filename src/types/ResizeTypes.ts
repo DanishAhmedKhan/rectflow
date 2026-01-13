@@ -9,6 +9,7 @@ export interface ResizeHandle {
 
 export interface GutterConfig {
     size: number
+    delay?: number
     style?: {
         color?: string
         hoverColor?: string

@@ -14,6 +14,7 @@ export const RECTFLOW_DEFAULTS: Required<Resolved<ResolvedRectflowOptions>> = {
             handles: [],
             gutter: {
                 size: 6,
+                delay: 150,
                 style: {
                     color: 'transparent',
                     hoverColor: 'rgba(0,0,0,0.25)',

@@ -24,8 +24,10 @@ export class ResizeManager {
     }
 
     public apply() {
-        this.createHorizontalGutters()
-        this.createVerticalGutters()
+        if (this.context.options.layout.resize && this.context.options.layout.resize.handles.length > 0) {
+            this.createHorizontalGutters()
+            this.createVerticalGutters()
+        }
     }
 
     private getBoundary(handle: ResizeHandle, boundaries: BoundaryGroup[]): BoundaryGroup | undefined {
@@ -52,12 +54,15 @@ export class ResizeManager {
             rectOption.y = rect.y + rect.height + this.layoutGap / 2 - this.gutter.size / 2
             rectOption.height = this.gutter.size
 
-            const gutterView = new GutterView('horizontal', boundary, new Rect(rectOption))
+            const gutterView = new GutterView(
+                {
+                    config: this.context.options.layout.resize?.gutter as GutterConfig,
+                    direction: 'horizontal',
+                    boundary,
+                },
+                new Rect(rectOption),
+            )
             this.horizontalGutters.push(gutterView)
-            gutterView.style({
-                background: 'blue',
-                cursor: 'row-resize',
-            })
             gutterView.mount(this.context.options.container)
 
             this.attachGutterDrag(gutterView, boundary, {
@@ -84,12 +89,15 @@ export class ResizeManager {
             rectOption.x = rect.x + rect.width + this.layoutGap / 2 - this.gutter.size / 2
             rectOption.width = this.gutter.size
 
-            const gutterView = new GutterView('horizontal', boundary, new Rect(rectOption))
+            const gutterView = new GutterView(
+                {
+                    config: this.context.options.layout.resize?.gutter as GutterConfig,
+                    direction: 'vertical',
+                    boundary,
+                },
+                new Rect(rectOption),
+            )
             this.verticalGutters.push(gutterView)
-            gutterView.style({
-                background: 'red',
-                cursor: 'col-resize',
-            })
             gutterView.mount(this.context.options.container)
 
             this.attachGutterDrag(gutterView, boundary, {
