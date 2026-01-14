@@ -123,22 +123,45 @@ export class ResizeManager {
             applySecond: (view: AreaView, delta: number) => void
         },
     ) {
-        let lastPos = 0
+        let anchorPos = 0
+        let isLocked = false
+        let lockedDirection: number | null = null
 
         const onMouseMove = (e: MouseEvent) => {
-            const delta = this.clampResizeDelta(lastPos - config.getPos(e), boundary, config.dimension)
+            const currentPos = config.getPos(e)
+            const rawDelta = anchorPos - currentPos
+            const direction = Math.sign(rawDelta)
 
-            lastPos = config.getPos(e)
+            if (isLocked) {
+                if (Math.sign(anchorPos - currentPos) !== lockedDirection) {
+                    isLocked = false
+                }
+                return
+            }
+
+            const delta = this.clampResizeDelta(rawDelta, boundary, config.dimension)
+
+            if (delta === 0 && rawDelta !== 0) {
+                isLocked = true
+                lockedDirection = direction
+                return
+            }
+
+            if (delta === 0) return
 
             this.applyResizeToBoundarySide(boundary.first, (view) => config.applyFirst(view, delta))
             this.applyResizeToBoundarySide(boundary.second, (view) => config.applySecond(view, delta))
+
+            anchorPos -= delta
 
             this.relayoutGutters()
         }
 
         const onMouseDown = (e: MouseEvent) => {
             e.preventDefault()
-            lastPos = config.getPos(e)
+            anchorPos = config.getPos(e)
+            isLocked = false
+            lockedDirection = null
 
             document.addEventListener('mousemove', onMouseMove)
             document.addEventListener('mouseup', onMouseUp)

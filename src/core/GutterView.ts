@@ -34,8 +34,8 @@ export class GutterView extends RectView {
     private init() {
         const elem = this.elem
 
-        console.log(this.direction)
         elem.style.cursor = this.direction === 'horizontal' ? 'row-resize' : 'col-resize'
+        elem.style.transition = 'background 0.2s'
 
         this.applyIdleStyle()
 
@@ -68,7 +68,6 @@ export class GutterView extends RectView {
 
         this.setState('active')
 
-        // Let ResizeManager know
         this.elem.dispatchEvent(
             new CustomEvent('gutter:activate', {
                 bubbles: true,
