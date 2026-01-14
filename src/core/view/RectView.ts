@@ -1,5 +1,5 @@
-import type { RectOption } from '../types/RectOption'
-import { Rect } from './Rect'
+import type { RectOption } from '../../types/RectOption'
+import { Rect } from '../Rect'
 
 export class RectView {
     public elem: HTMLElement

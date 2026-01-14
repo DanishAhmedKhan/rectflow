@@ -1,7 +1,7 @@
 import { RectView } from './RectView'
-import type { Rect } from './Rect'
-import type { BoundaryGroup } from './AreaTopology'
-import type { GutterConfig } from '../types/ResizeTypes'
+import type { Rect } from '../Rect'
+import type { BoundaryGroup } from '../AreaTopology'
+import type { GutterConfig } from '../../types/ResizeTypes'
 
 type GutterDirection = 'horizontal' | 'vertical'
 
@@ -15,7 +15,6 @@ type GutterViewOptions = {
 
 export class GutterView extends RectView {
     private state: GutterState = 'idle'
-    private hoverTimer: number | null = null
 
     public readonly config: GutterConfig
     public readonly direction: GutterDirection
@@ -38,49 +37,9 @@ export class GutterView extends RectView {
         elem.style.transition = 'background 0.2s'
 
         this.applyIdleStyle()
-
-        elem.addEventListener('mouseenter', this.onMouseEnter)
-        elem.addEventListener('mouseleave', this.onMouseLeave)
-        elem.addEventListener('mousedown', this.onMouseDown)
     }
 
-    private onMouseEnter = () => {
-        const delay = this.config.delay ?? 0
-
-        this.hoverTimer = window.setTimeout(() => {
-            this.setState('hover')
-        }, delay)
-    }
-
-    private onMouseLeave = () => {
-        if (this.hoverTimer !== null) {
-            clearTimeout(this.hoverTimer)
-            this.hoverTimer = null
-        }
-
-        if (this.state !== 'active') {
-            this.setState('idle')
-        }
-    }
-
-    private onMouseDown = (e: MouseEvent) => {
-        if (this.state !== 'hover') return
-
-        this.setState('active')
-
-        this.elem.dispatchEvent(
-            new CustomEvent('gutter:activate', {
-                bubbles: true,
-                detail: {
-                    gutter: this,
-                    direction: this.direction,
-                    boundary: this.boundary,
-                },
-            }),
-        )
-    }
-
-    private setState(state: GutterState) {
+    public setState(state: GutterState) {
         if (this.state === state) return
         this.state = state
 

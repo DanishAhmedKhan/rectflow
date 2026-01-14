@@ -1,10 +1,10 @@
 import { Rect } from './Rect'
-import { GutterView } from './GutterView'
+import { GutterView } from './view/GutterView'
 import type { AreaName, GutterConfig, ResizeHandle } from '../types/ResizeTypes'
 import type { AreaTopology, BoundaryGroup } from './AreaTopology'
 import type { RectflowContext } from './RectflowContext'
 import type { RectOption } from '../types/RectOption'
-import type { AreaView } from './AreaView'
+import type { AreaView } from './view/AreaView'
 
 export class ResizeManager {
     private areaTopology: AreaTopology
@@ -127,7 +127,19 @@ export class ResizeManager {
         let isLocked = false
         let lockedDirection: number | null = null
 
+        let hoverTimer: number | null = null
+        let isActive = false
+
+        const clearHoverTimer = () => {
+            if (hoverTimer !== null) {
+                clearTimeout(hoverTimer)
+                hoverTimer = null
+            }
+        }
+
         const onMouseMove = (e: MouseEvent) => {
+            if (!isActive) return
+
             const currentPos = config.getPos(e)
             const rawDelta = anchorPos - currentPos
             const direction = Math.sign(rawDelta)
@@ -159,20 +171,52 @@ export class ResizeManager {
 
         const onMouseDown = (e: MouseEvent) => {
             e.preventDefault()
-            anchorPos = config.getPos(e)
+            clearHoverTimer()
+
+            isActive = true
             isLocked = false
             lockedDirection = null
+
+            gutterView.setState('active')
+
+            anchorPos = config.getPos(e)
 
             document.addEventListener('mousemove', onMouseMove)
             document.addEventListener('mouseup', onMouseUp)
         }
 
         const onMouseUp = () => {
+            isActive = false
+            isLocked = false
+
+            gutterView.setState('hover')
+
             document.removeEventListener('mousemove', onMouseMove)
             document.removeEventListener('mouseup', onMouseUp)
         }
 
-        gutterView.elem.addEventListener('mousedown', onMouseDown)
+        const onMouseEnter = () => {
+            if (isActive) return
+
+            const delay = gutterView.config.delay ?? 0
+            clearHoverTimer()
+
+            hoverTimer = window.setTimeout(() => {
+                gutterView.setState('hover')
+            }, delay)
+        }
+
+        const onMouseLeave = () => {
+            if (isActive) return
+
+            clearHoverTimer()
+            gutterView.setState('idle')
+        }
+
+        const elem = gutterView.elem
+        elem.addEventListener('mouseenter', onMouseEnter)
+        elem.addEventListener('mouseleave', onMouseLeave)
+        elem.addEventListener('mousedown', onMouseDown)
     }
 
     private computeGutterSpan(

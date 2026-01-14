@@ -1,4 +1,4 @@
-import { AreaView } from './AreaView'
+import { AreaView } from './view/AreaView'
 import { randomColor } from '../helper/randomColor'
 import type { RectflowContext } from './RectflowContext'
 import type { AreaName } from '../types/ResizeTypes'
