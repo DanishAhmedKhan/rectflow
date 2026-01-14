@@ -17,9 +17,23 @@ export interface GutterConfig {
     }
 }
 
+export interface ResizeConstraint {
+    min?: number
+    max?: number
+    step?: number
+}
+
+export interface ContraintsConfig {
+    default?: ResizeConstraint
+    areas: {
+        [key: string]: ResizeConstraint
+    }
+}
+
 export interface ResizeConfig {
     handles: ResizeHandle[]
     gutter: number | GutterConfig
+    constraints?: ContraintsConfig
 }
 
 export interface ResolvedResizeHandle {

@@ -18,6 +18,7 @@ Rectflow lets you define rows, columns, gaps, and named areas — then calculate
 
 -   Automatic DOM creation for missing areas
 -   Resize-aware (re-layout on container resize)
+-   Interactive area resizing using draggable gutters
 -   CDN-ready bundle + npm package
 
 ---
@@ -50,20 +51,15 @@ import { Rectflow } from 'rectflow'
 ### HTML
 
 ```html
-<div class="main">
-    <div class="head"></div>
-</div>
+<div id="container"></div>
 ```
 
 ### CSS
 
 ```css
-.main {
+#container {
     width: 100%;
-    height: 100vh; /* or a fixed height like 600px */
-}
-.head {
-    background-color: blueviolet;
+    height: 100vh;
 }
 ```
 
@@ -73,23 +69,34 @@ If the container does not have a defined height, Rectflow will not be able to ca
 ### JavaScript
 
 ```ts
- const mainElem = document.querySelector('.main')
+const containerElem = document.getElementById('container')
 
 const rectflow = new Rectflow({
-    container: mainElem,
+    container: containerElem,
     layout: {
-        rows: '50px auto 50px',
-        columns: '50px auto 100px',
-        gap: 5,
+        rows: '60px auto 60px',
+        columns: '60px 240px auto 60px',
+        gap: 6,
         areas: [
-            ['head head head'],
-            ['menu content widget'],
-            ['menu bottom widget']
-        ]
+            ['A A A A'],
+            ['B E C D'],
+            ['B E F D'],
+        ],
+        resize?: {
+            handles: [
+                { between: ['C', 'F'] },
+                { between: ['E', 'C'] },
+            ],
+            gutter: {
+                size: 4,
+                style: {
+                    hoverColor: 'rgba(0, 0, 0, 0.1)',
+                }
+            },
+        }
     }
 })
 
-rectflow.registerArea('head', document.querySelector('.head'))
 ```
 
 ---
@@ -135,12 +142,9 @@ This makes rapid prototyping easy.
 
 ## 🔁 Resize Handling
 
-Rectflow listens to container resize events and automatically recalculates layout:
+Rectflow automatically recalculates the layout when the container size changes.
 
--   Uses `ResizeObserver`
--   Re-applies positions when size changes
-
-No manual resize handling required.
+It also supports **interactive resizing of individual areas** using draggable gutters, allowing users to dynamically adjust the layout at runtime.
 
 ---
 
@@ -156,44 +160,47 @@ No manual resize handling required.
     layout: {
         rows: string
         columns: string
-        gap?: number
         areas: string[][]
+        gap?: number
+        resize: {
+            handles: {
+                between: string[]
+            }[]
+            gutter: {
+                size: number
+                color?: string
+                hoverColor?: string
+                activeColor?: string
+            }
+        }
     }
 }
 ```
 
----
+Resize handles are automatically resolved as horizontal or vertical based on the shared boundary between areas.
 
-### `registerArea(name, element)`
 
-Registers an existing DOM element for an area.
+### `getArea(name)`
+
+Returns the HTML element for a given area and lets you perform your own custom logic on it.
 
 ```ts
-rectflow.registerArea('chart', chartElement)
+rectflow.getArea('A')
 ```
 
 ---
-
-### `layout()`
-
-Calculates layout and applies styles.
-
-```ts
-rectflow.layout()
-```
-
-ℹ️ Note: `layout()` is called automatically by Rectflow whenever needed (e.g. during initialization or internal updates).
-In most cases, you do not need to call this method manually.
-
-**When should you call it?**
-
-You should only call `layout()` if:
--   You perform manual DOM manipulations outside of Rectflow
--   You change container dimensions programmatically
--   You update layout-related styles or measurements via custom JavaScript
-
+## 🚫 Non-Goals
 ---
 
+Rectflow is not intended to:
+
+- Replace CSS Grid for static layouts
+- Handle animations or transitions
+- Manage application state
+
+It focuses solely on **layout calculation and positioning**.
+
+---
 ## 📄 License
 
 MIT
@@ -205,8 +212,9 @@ MIT
 Inspired by:
 
 -   CSS Grid
--   Game UI layout systems
 -   Charting & trading platforms
+-   Game UI layout systems
+-   Code Editors
 -   Dashboards
 
 ---

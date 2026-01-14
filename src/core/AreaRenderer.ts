@@ -14,14 +14,14 @@ export class AreaRenderer {
             const areaView = new AreaView(name, rect)
             this.areas[name] = areaView
             areaView.elem.style.overflow = 'hidden'
-            areaView.elem.innerHTML = name
             areaView.elem.dataset.rectflowArea = name
+            // areaView.elem.innerHTML = name
+            areaView.elem.style.background = 'white'
         }
     }
 
     public apply() {
         Object.values(this.areas).forEach((areaView) => {
-            areaView.elem.style.background = randomColor()
             areaView.mount(this.context.options.container)
         })
     }

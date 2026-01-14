@@ -16,6 +16,9 @@ export class ResizeManager {
     private horizontalGutters: GutterView[] = []
     private verticalGutters: GutterView[] = []
 
+    private resizeObserver!: ResizeObserver
+    private activeGutter: GutterView | null = null
+
     constructor(private context: RectflowContext) {
         this.areaTopology = context.areaTopology
         this.gutter = context.options.layout.resize?.gutter! as GutterConfig
@@ -24,10 +27,27 @@ export class ResizeManager {
     }
 
     public apply() {
+        if (!this.resizeObserver) this.addContainerResize()
+
         if (this.context.options.layout.resize && this.context.options.layout.resize.handles.length > 0) {
             this.createHorizontalGutters()
             this.createVerticalGutters()
         }
+    }
+
+    private addContainerResize() {
+        const container = this.context.options.container
+        this.resizeObserver = new ResizeObserver(() => {
+            this.context.layoutEngine.calculate()
+
+            // 2. Apply new rects to AreaViews
+            this.context.areaRenderer.apply()
+
+            // 3. Re-layout gutters (important!)
+            this.context.resizeManager?.relayoutGutters()
+        })
+
+        this.resizeObserver.observe(container)
     }
 
     private getBoundary(handle: ResizeHandle, boundaries: BoundaryGroup[]): BoundaryGroup | undefined {
@@ -173,6 +193,8 @@ export class ResizeManager {
             e.preventDefault()
             clearHoverTimer()
 
+            this.activeGutter = gutterView
+
             isActive = true
             isLocked = false
             lockedDirection = null
@@ -189,6 +211,8 @@ export class ResizeManager {
             isActive = false
             isLocked = false
 
+            this.activeGutter = null
+
             gutterView.setState('hover')
 
             document.removeEventListener('mousemove', onMouseMove)
@@ -196,6 +220,8 @@ export class ResizeManager {
         }
 
         const onMouseEnter = () => {
+            if (this.activeGutter && this.activeGutter !== gutterView) return
+
             if (isActive) return
 
             const delay = gutterView.config.delay ?? 0
@@ -208,6 +234,7 @@ export class ResizeManager {
 
         const onMouseLeave = () => {
             if (isActive) return
+            if (this.activeGutter) return
 
             clearHoverTimer()
             gutterView.setState('idle')

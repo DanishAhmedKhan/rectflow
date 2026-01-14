@@ -12,10 +12,10 @@ import type { Resolved } from '../types/Resolved'
 export class RectflowContext {
     public readonly options: Resolved<ResolvedRectflowOptions>
 
-    public readonly areaTopology: AreaTopology
-    public readonly layoutEngine: LayoutEngine
-    public readonly areaRenderer: AreaRenderer
-    public readonly resizeManager: ResizeManager
+    public areaTopology!: AreaTopology
+    public layoutEngine!: LayoutEngine
+    public areaRenderer!: AreaRenderer
+    public resizeManager!: ResizeManager
 
     public onLayoutChange?: () => void
 
@@ -25,6 +25,10 @@ export class RectflowContext {
 
         this.initContainerStyle()
 
+        this.init()
+    }
+
+    public init() {
         this.areaTopology = new AreaTopology(this)
         this.layoutEngine = new LayoutEngine(this)
         this.areaRenderer = new AreaRenderer(this)

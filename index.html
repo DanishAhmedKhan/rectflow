@@ -15,7 +15,7 @@
         #container {
             width: 100vw;
             height: 100vh;
-            background-color: grey;
+            background-color: lightgrey;
         }
     </style>
 </head>
@@ -31,42 +31,28 @@
         const rectflow = new Rectflow({
             container: mainElem,
             layout: {
-                rows: '50px 1fr 1fr 1fr 1fr 60px 1fr',
-                columns: '100px 1fr 1fr 1fr 1fr 100px 1fr',
-                gap: 0,
+                rows: '60px auto 60px',
+                columns: '60px 240px auto 60px',
+                gap: 6,
                 areas: [
-                    ['A A X X X Y O'],
-                    ['B C C C D F O'],
-                    ['B C C C D F O'],
-                    ['P C C C D F O'],
-                    ['P E Z Z D F O'],
-                    ['P G G H D M M'],
-                    ['P J L L K K R'],
+                    ['A A A A'],
+                    ['B E C D'],
+                    ['B E F D'],
                 ],
                 resize: {
                     handles: [
-                        { between: ['C', 'E'] },
-                        { between: ['B', 'C'] },
-                        { between: ['X', 'C'] },
-                        { between: ['D', 'F'] },
-                        { between: ['L', 'K'] },
-                        { between: ['H', 'L'] },
-                        { between: ['P', 'B'] },
+                        { between: ['C', 'F'] },
+                        { between: ['E', 'C'] },
                     ],
                     gutter: {
                         size: 4,
                         style: {
-                            color: 'transparent',
-                            hoverColor: 'red',
-                            activeColor: 'blue',
+                            hoverColor: 'rgba(0, 0, 0, 0.1)',
                         }
                     },
                 }
             }
         })
-
-        const areaA = rectflow.getArea('A')
-        areaA.innerHTML = 'Heading'
 
     </script>
 </body>
