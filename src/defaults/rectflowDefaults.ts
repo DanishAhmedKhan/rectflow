@@ -20,6 +20,11 @@ export const RECTFLOW_DEFAULTS: Required<Resolved<ResolvedRectflowOptions>> = {
                     hoverColor: 'rgba(0,0,0,0.25)',
                     activeColor: 'rgba(0,0,0,0.45)',
                 },
+                // style: {
+                //     color: 'red',
+                //     hoverColor: 'blue',
+                //     activeColor: 'green',
+                // },
             },
         },
     },

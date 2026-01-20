@@ -15,23 +15,29 @@ export class Rectflow {
         container.style.position = 'absolute'
 
         this.context.onLayoutChange = () => {
-            // this.applyLayout()
-            this.context.areaRenderer.apply()
-            this.context.resizeManager.apply()
-        }
-
-        this.applyLayout()
-    }
-
-    private applyLayout() {
-        try {
-            this.context.areaTopology.calculate()
             this.context.layoutEngine.calculate()
             this.context.areaRenderer.apply()
-            this.context.resizeManager.apply()
+            this.context.resizeManager.relayoutGutters()
+        }
+
+        try {
+            this.initLayout()
+            this.applyLayout()
         } catch (err) {
             this.handleError(err)
         }
+    }
+
+    private initLayout() {
+        this.context.areaTopology.calculate()
+        this.context.layoutEngine.initTracks()
+    }
+
+    private applyLayout() {
+        this.context.areaTopology.calculate()
+        this.context.layoutEngine.calculate()
+        this.context.areaRenderer.apply()
+        this.context.resizeManager.apply()
     }
 
     public setLayout(layout: LayoutConfig) {

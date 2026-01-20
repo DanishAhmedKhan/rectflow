@@ -95,16 +95,7 @@ export class ResizeManager {
                 gutterView.mount(container)
                 this.horizontalGutters.set(key, gutterView)
 
-                this.attachGutterDrag(gutterView, boundary, {
-                    getPos: (e) => e.clientY,
-                    dimension: 'height',
-                    applyFirst: (view, dy) => {
-                        dy > 0 ? view.rect.shrinkFromBottom(dy) : view.rect.growFromBottom(-dy)
-                    },
-                    applySecond: (view, dy) => {
-                        dy > 0 ? view.rect.growFromTop(dy) : view.rect.shrinkFromTop(-dy)
-                    },
-                })
+                this.attachGutterDrag(gutterView, boundary, 'horizontal')
             } else {
                 gutterView.update(new Rect(rectOption))
             }
@@ -153,16 +144,7 @@ export class ResizeManager {
                 gutterView.mount(container)
                 this.verticalGutters.set(key, gutterView)
 
-                this.attachGutterDrag(gutterView, boundary, {
-                    getPos: (e) => e.clientX,
-                    dimension: 'width',
-                    applyFirst: (view, dx) => {
-                        dx > 0 ? view.rect.shrinkFromRight(dx) : view.rect.growFromRight(-dx)
-                    },
-                    applySecond: (view, dx) => {
-                        dx > 0 ? view.rect.growFromLeft(dx) : view.rect.shrinkFromLeft(-dx)
-                    },
-                })
+                this.attachGutterDrag(gutterView, boundary, 'vertical')
             } else {
                 gutterView.update(new Rect(rectOption))
             }
@@ -176,75 +158,53 @@ export class ResizeManager {
         }
     }
 
-    private attachGutterDrag(
-        gutterView: GutterView,
-        boundary: BoundaryGroup,
-        config: {
-            getPos: (e: MouseEvent) => number
-            dimension: 'width' | 'height'
-            applyFirst: (view: AreaView, delta: number) => void
-            applySecond: (view: AreaView, delta: number) => void
-        },
-    ) {
-        let anchorPos = 0
-        let isLocked = false
-        let lockedDirection: number | null = null
+    private getRowIndexFromBoundary(boundary: BoundaryGroup): number {
+        const area = boundary.first[0]
+        const box = this.context.areaTopology.boxes[area]
+        return box.rowEnd
+    }
 
-        let hoverTimer: number | null = null
+    private getColIndexFromBoundary(boundary: BoundaryGroup): number {
+        const area = boundary.first[0]
+        const box = this.context.areaTopology.boxes[area]
+        return box.colEnd
+    }
+
+    private attachGutterDrag(gutterView: GutterView, boundary: BoundaryGroup, direction: 'horizontal' | 'vertical') {
+        let anchorPos = 0
         let isActive = false
 
-        const clearHoverTimer = () => {
-            if (hoverTimer !== null) {
-                clearTimeout(hoverTimer)
-                hoverTimer = null
-            }
-        }
+        const getPos = (e: MouseEvent) => (direction === 'horizontal' ? e.clientY : e.clientX)
 
         const onMouseMove = (e: MouseEvent) => {
             if (!isActive) return
 
-            const currentPos = config.getPos(e)
-            const rawDelta = anchorPos - currentPos
-            const direction = Math.sign(rawDelta)
+            const current = getPos(e)
+            const rawDelta = current - anchorPos
+            if (rawDelta === 0) return
 
-            if (isLocked) {
-                if (Math.sign(anchorPos - currentPos) !== lockedDirection) {
-                    isLocked = false
-                }
-                return
+            let appliedDelta = 0
+
+            if (direction === 'horizontal') {
+                const rowIndex = this.getRowIndexFromBoundary(boundary)
+                appliedDelta = this.context.layoutEngine.resizeRow(rowIndex, rawDelta)
+            } else {
+                const colIndex = this.getColIndexFromBoundary(boundary)
+                appliedDelta = this.context.layoutEngine.resizeColumn(colIndex, rawDelta)
             }
 
-            const delta = this.clampResizeDelta(rawDelta, boundary, config.dimension)
-
-            if (delta === 0 && rawDelta !== 0) {
-                isLocked = true
-                lockedDirection = direction
-                return
+            if (appliedDelta !== 0) {
+                anchorPos += appliedDelta
+                this.context.onLayoutChange?.()
             }
-
-            if (delta === 0) return
-
-            this.applyResizeToBoundarySide(boundary.first, (view) => config.applyFirst(view, delta))
-            this.applyResizeToBoundarySide(boundary.second, (view) => config.applySecond(view, delta))
-
-            anchorPos -= delta
-
-            this.relayoutGutters()
         }
 
         const onMouseDown = (e: MouseEvent) => {
             e.preventDefault()
-            clearHoverTimer()
-
-            this.activeGutter = gutterView
-
             isActive = true
-            isLocked = false
-            lockedDirection = null
+            anchorPos = getPos(e)
 
             gutterView.setState('active')
-
-            anchorPos = config.getPos(e)
 
             document.addEventListener('mousemove', onMouseMove)
             document.addEventListener('mouseup', onMouseUp)
@@ -252,41 +212,13 @@ export class ResizeManager {
 
         const onMouseUp = () => {
             isActive = false
-            isLocked = false
-
-            this.activeGutter = null
-
             gutterView.setState('hover')
 
             document.removeEventListener('mousemove', onMouseMove)
             document.removeEventListener('mouseup', onMouseUp)
         }
 
-        const onMouseEnter = () => {
-            if (this.activeGutter && this.activeGutter !== gutterView) return
-
-            if (isActive) return
-
-            const delay = gutterView.config.delay ?? 0
-            clearHoverTimer()
-
-            hoverTimer = window.setTimeout(() => {
-                gutterView.setState('hover')
-            }, delay)
-        }
-
-        const onMouseLeave = () => {
-            if (isActive) return
-            if (this.activeGutter) return
-
-            clearHoverTimer()
-            gutterView.setState('idle')
-        }
-
-        const elem = gutterView.elem
-        elem.addEventListener('mouseenter', onMouseEnter)
-        elem.addEventListener('mouseleave', onMouseLeave)
-        elem.addEventListener('mousedown', onMouseDown)
+        gutterView.elem.addEventListener('mousedown', onMouseDown)
     }
 
     private computeGutterSpan(
@@ -312,7 +244,8 @@ export class ResizeManager {
 
         return axis === 'x' ? { x: min, width: max - min } : { y: min, height: max - min }
     }
-    private relayoutGutters() {
+
+    public relayoutGutters() {
         for (const gutter of this.horizontalGutters.values()) {
             const boundary = gutter.boundary
 
@@ -325,7 +258,6 @@ export class ResizeManager {
             gutter.rect.width = span.width
 
             const refRect = this.context.areaRenderer.getView(boundary.first[0])!.rect
-
             gutter.rect.y = refRect.y + refRect.height + this.layoutGap / 2 - this.gutter.size / 2
 
             gutter.applyRect()
@@ -343,33 +275,9 @@ export class ResizeManager {
             gutter.rect.height = span.height
 
             const refRect = this.context.areaRenderer.getView(boundary.first[0])!.rect
-
             gutter.rect.x = refRect.x + refRect.width + this.layoutGap / 2 - this.gutter.size / 2
 
             gutter.applyRect()
         }
-    }
-
-    public clampResizeDelta(delta: number, boundary: BoundaryGroup, dimension: 'width' | 'height'): number {
-        if (delta > 0) {
-            for (const name of boundary.first) {
-                const v = this.context.areaRenderer.getView(name)!
-                delta = Math.min(delta, v.rect[dimension])
-            }
-        } else if (delta < 0) {
-            for (const name of boundary.second) {
-                const v = this.context.areaRenderer.getView(name)!
-                delta = Math.max(delta, -v.rect[dimension])
-            }
-        }
-        return delta
-    }
-
-    private applyResizeToBoundarySide(boundarySide: AreaName[], resize: (view: AreaView) => void) {
-        boundarySide.forEach((name) => {
-            const view = this.context.areaRenderer.getView(name)!
-            resize(view)
-            view.applyRect()
-        })
     }
 }
