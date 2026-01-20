@@ -1,10 +1,10 @@
 import { Rect } from './Rect'
+import { AreaView } from './view/AreaView'
 import { GutterView } from './view/GutterView'
 import type { AreaName, GutterConfig, ResizeHandle } from '../types/ResizeTypes'
 import type { AreaTopology, BoundaryGroup } from './AreaTopology'
 import type { RectflowContext } from './RectflowContext'
 import type { RectOption } from '../types/RectOption'
-import type { AreaView } from './view/AreaView'
 
 export class ResizeManager {
     private areaTopology: AreaTopology
@@ -27,7 +27,7 @@ export class ResizeManager {
     }
 
     public apply() {
-        if (!this.resizeObserver) this.addContainerResize()
+        // if (!this.resizeObserver) this.addContainerResize()
 
         if (this.context.options.layout.resize && this.context.options.layout.resize.handles.length > 0) {
             this.createHorizontalGutters()
@@ -38,13 +38,14 @@ export class ResizeManager {
     private addContainerResize() {
         const container = this.context.options.container
         this.resizeObserver = new ResizeObserver(() => {
-            this.context.layoutEngine.calculate()
+            console.log('resize')
+            // this.context.layoutEngine.calculate()
 
-            // 2. Apply new rects to AreaViews
-            this.context.areaRenderer.apply()
+            // // 2. Apply new rects to AreaViews
+            // this.context.areaRenderer.apply()
 
-            // 3. Re-layout gutters (important!)
-            this.context.resizeManager?.relayoutGutters()
+            // // 3. Re-layout gutters (important!)
+            // this.context.resizeManager?.relayoutGutters()
         })
 
         this.resizeObserver.observe(container)

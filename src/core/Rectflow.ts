@@ -18,9 +18,9 @@ export class Rectflow {
 
     private process() {
         try {
-            this.context.onLayoutChange = () => {
-                this.context.areaRenderer.apply()
-            }
+            // this.context.onLayoutChange = () => {
+            //     this.context.areaRenderer.apply()
+            // }
 
             this.applyCurrentLayout()
         } catch (err) {
@@ -29,6 +29,9 @@ export class Rectflow {
     }
 
     private applyCurrentLayout() {
+        console.log('apply')
+        this.context.areaTopology.calculate()
+        this.context.layoutEngine.calculate()
         this.context.areaRenderer.apply()
         this.context.resizeManager.apply()
     }

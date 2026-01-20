@@ -6,8 +6,8 @@ export class LayoutEngine {
     public computedRect: ComputedRect = {}
 
     constructor(private context: RectflowContext) {
-        this.calculate()
-        console.log(this.computedRect)
+        // this.calculate()
+        // console.log(this.computedRect)
     }
 
     public setLayout(layout: LayoutConfig) {

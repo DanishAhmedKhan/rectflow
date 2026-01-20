@@ -6,7 +6,9 @@ import type { AreaName } from '../types/ResizeTypes'
 export class AreaRenderer {
     private areas: Record<AreaName, AreaView> = {}
 
-    constructor(private context: RectflowContext) {
+    constructor(private context: RectflowContext) {}
+
+    public apply() {
         const computedRect = this.context.layoutEngine.computedRect
 
         for (const name in computedRect) {
@@ -18,9 +20,7 @@ export class AreaRenderer {
             // areaView.elem.innerHTML = name
             areaView.elem.style.background = 'white'
         }
-    }
 
-    public apply() {
         Object.values(this.areas).forEach((areaView) => {
             areaView.mount(this.context.options.container)
         })

@@ -1,4 +1,3 @@
-import type { LayoutAreas } from '../types/LayoutConfig'
 import type { RectflowContext } from './RectflowContext'
 
 export type Cell = {
@@ -34,10 +33,15 @@ export class AreaTopology {
 
     constructor(context: RectflowContext) {
         this.layoutAreas = context.options.layout.areas
+        // this.calculate()
+    }
+
+    public calculate() {
+        console.log('calculate')
         this.buildCells()
         this.calculateBoxes()
-        this.computeHorizontalBoundaries(Object.values(this.boxes))
-        this.computeVerticalBoundaries(Object.values(this.boxes))
+        this.computeHorizontalBoundaries()
+        this.computeVerticalBoundaries()
     }
 
     private buildCells() {
@@ -128,11 +132,23 @@ export class AreaTopology {
         return result
     }
 
-    public computeHorizontalBoundaries(boxes: AreaBox[]) {
-        this.horizontalBoundary = this.computeBoundaries(boxes, 'rowEnd', 'rowStart', 'colStart', 'colEnd')
+    public computeHorizontalBoundaries() {
+        this.horizontalBoundary = this.computeBoundaries(
+            Object.values(this.boxes),
+            'rowEnd',
+            'rowStart',
+            'colStart',
+            'colEnd',
+        )
     }
 
-    public computeVerticalBoundaries(boxes: AreaBox[]) {
-        this.verticalBoundary = this.computeBoundaries(boxes, 'colEnd', 'colStart', 'rowStart', 'rowEnd')
+    public computeVerticalBoundaries() {
+        this.verticalBoundary = this.computeBoundaries(
+            Object.values(this.boxes),
+            'colEnd',
+            'colStart',
+            'rowStart',
+            'rowEnd',
+        )
     }
 }
