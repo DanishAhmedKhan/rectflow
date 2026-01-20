@@ -1,5 +1,4 @@
 import { AreaView } from './view/AreaView'
-import { randomColor } from '../helper/randomColor'
 import type { RectflowContext } from './RectflowContext'
 import type { AreaName } from '../types/ResizeTypes'
 
@@ -9,21 +8,34 @@ export class AreaRenderer {
     constructor(private context: RectflowContext) {}
 
     public apply() {
+        const container = this.context.options.container
         const computedRect = this.context.layoutEngine.computedRect
+
+        for (const name in this.areas) {
+            if (!computedRect[name]) {
+                this.areas[name].remove()
+                delete this.areas[name]
+            }
+        }
 
         for (const name in computedRect) {
             const rect = computedRect[name]
-            const areaView = new AreaView(name, rect)
-            this.areas[name] = areaView
-            areaView.elem.style.overflow = 'hidden'
-            areaView.elem.dataset.rectflowArea = name
-            // areaView.elem.innerHTML = name
-            areaView.elem.style.background = 'white'
-        }
 
-        Object.values(this.areas).forEach((areaView) => {
-            areaView.mount(this.context.options.container)
-        })
+            let areaView = this.areas[name]
+
+            if (!areaView) {
+                areaView = new AreaView(name, rect)
+                this.areas[name] = areaView
+
+                areaView.elem.style.overflow = 'hidden'
+                areaView.elem.dataset.rectflowArea = name
+                areaView.elem.style.background = 'white'
+
+                areaView.mount(container)
+            } else {
+                areaView.update(rect)
+            }
+        }
     }
 
     public getView(name: AreaName): AreaView | undefined {
@@ -36,5 +48,6 @@ export class AreaRenderer {
 
     public clear() {
         Object.values(this.areas).forEach((area) => area.remove())
+        this.areas = {}
     }
 }

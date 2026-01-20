@@ -7,39 +7,37 @@ export class Rectflow {
     private readonly options: RectflowOptions
     private context: RectflowContext
 
-    private observer!: ResizeObserver
-
     constructor(options: RectflowOptions) {
-        this.options = options
         this.context = new RectflowContext(options)
+        this.options = this.context.options
 
-        this.process()
+        const { container } = this.context.options
+        container.style.position = 'absolute'
+
+        this.context.onLayoutChange = () => {
+            // this.applyLayout()
+            this.context.areaRenderer.apply()
+            this.context.resizeManager.apply()
+        }
+
+        this.applyLayout()
     }
 
-    private process() {
+    private applyLayout() {
         try {
-            // this.context.onLayoutChange = () => {
-            //     this.context.areaRenderer.apply()
-            // }
-
-            this.applyCurrentLayout()
+            this.context.areaTopology.calculate()
+            this.context.layoutEngine.calculate()
+            this.context.areaRenderer.apply()
+            this.context.resizeManager.apply()
         } catch (err) {
             this.handleError(err)
         }
     }
 
-    private applyCurrentLayout() {
-        console.log('apply')
-        this.context.areaTopology.calculate()
-        this.context.layoutEngine.calculate()
-        this.context.areaRenderer.apply()
-        this.context.resizeManager.apply()
-    }
-
     public setLayout(layout: LayoutConfig) {
         try {
             this.context.layoutEngine.setLayout(layout)
-            this.applyCurrentLayout()
+            this.applyLayout()
         } catch (err) {
             this.handleError(err)
         }
@@ -47,11 +45,6 @@ export class Rectflow {
 
     public getArea(area: string) {
         return this.context.areaRenderer.getAreaElement(area)
-    }
-
-    public destroy() {
-        this.observer.disconnect()
-        this.context.areaRenderer.clear()
     }
 
     private handleError(err: unknown) {

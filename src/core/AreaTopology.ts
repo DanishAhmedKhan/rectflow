@@ -28,16 +28,19 @@ export class AreaTopology {
 
     public cells: Cell[] = []
     public boxes: Record<AreaName, AreaBox> = {}
-    public horizontalBoundary!: BoundaryGroup[]
-    public verticalBoundary!: BoundaryGroup[]
+    public horizontalBoundary: BoundaryGroup[] = []
+    public verticalBoundary: BoundaryGroup[] = []
 
     constructor(context: RectflowContext) {
         this.layoutAreas = context.options.layout.areas
-        // this.calculate()
     }
 
     public calculate() {
-        console.log('calculate')
+        this.cells = []
+        this.boxes = {}
+        this.horizontalBoundary = []
+        this.verticalBoundary = []
+
         this.buildCells()
         this.calculateBoxes()
         this.computeHorizontalBoundaries()
@@ -45,8 +48,6 @@ export class AreaTopology {
     }
 
     private buildCells() {
-        this.cells = []
-
         for (let r = 0; r < this.layoutAreas.length; r++) {
             for (let c = 0; c < this.layoutAreas[r].length; c++) {
                 this.cells.push({

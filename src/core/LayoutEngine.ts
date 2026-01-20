@@ -5,10 +5,7 @@ import type { ComputedRect, LayoutConfig } from '../types/LayoutConfig'
 export class LayoutEngine {
     public computedRect: ComputedRect = {}
 
-    constructor(private context: RectflowContext) {
-        // this.calculate()
-        // console.log(this.computedRect)
-    }
+    constructor(private context: RectflowContext) {}
 
     public setLayout(layout: LayoutConfig) {
         this.context.options.layout = layout
@@ -16,6 +13,8 @@ export class LayoutEngine {
     }
 
     public calculate() {
+        this.computedRect = {}
+
         const container = this.context.options.container
         const layout = this.context.options.layout
         const boxes = this.context.areaTopology.boxes

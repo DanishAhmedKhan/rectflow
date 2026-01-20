@@ -13,8 +13,8 @@ export class ResizeManager {
     private gutter: GutterConfig
     private layoutGap: number
 
-    private horizontalGutters: GutterView[] = []
-    private verticalGutters: GutterView[] = []
+    private horizontalGutters = new Map<string, GutterView>()
+    private verticalGutters = new Map<string, GutterView>()
 
     private resizeObserver!: ResizeObserver
     private activeGutter: GutterView | null = null
@@ -27,7 +27,7 @@ export class ResizeManager {
     }
 
     public apply() {
-        // if (!this.resizeObserver) this.addContainerResize()
+        if (!this.resizeObserver) this.addContainerResize()
 
         if (this.context.options.layout.resize && this.context.options.layout.resize.handles.length > 0) {
             this.createHorizontalGutters()
@@ -38,14 +38,7 @@ export class ResizeManager {
     private addContainerResize() {
         const container = this.context.options.container
         this.resizeObserver = new ResizeObserver(() => {
-            console.log('resize')
-            // this.context.layoutEngine.calculate()
-
-            // // 2. Apply new rects to AreaViews
-            // this.context.areaRenderer.apply()
-
-            // // 3. Re-layout gutters (important!)
-            // this.context.resizeManager?.relayoutGutters()
+            this.context.onLayoutChange?.()
         })
 
         this.resizeObserver.observe(container)
@@ -63,74 +56,123 @@ export class ResizeManager {
         }
     }
 
+    private getBoundaryKey(boundary: BoundaryGroup): string {
+        return boundary.first.join('|') + '::' + boundary.second.join('|')
+    }
+
     private createHorizontalGutters() {
+        const container = this.context.options.container
+        const computedRect = this.context.layoutEngine.computedRect
+
+        const activeKeys = new Set<string>()
+
         for (const handle of this.handles) {
             const boundary = this.getBoundary(handle, this.areaTopology.horizontalBoundary)
             if (!boundary) continue
 
+            const key = this.getBoundaryKey(boundary)
+            activeKeys.add(key)
+
             let rectOption = { ...this.computeGutterSpan(boundary, 'x') } as RectOption
             const areaName = boundary.first[0]
-            const rect = this.context.layoutEngine.computedRect[areaName]
+            const rect = computedRect[areaName]
 
             rectOption.y = rect.y + rect.height + this.layoutGap / 2 - this.gutter.size / 2
             rectOption.height = this.gutter.size
 
-            const gutterView = new GutterView(
-                {
-                    config: this.context.options.layout.resize?.gutter as GutterConfig,
-                    direction: 'horizontal',
-                    boundary,
-                },
-                new Rect(rectOption),
-            )
-            this.horizontalGutters.push(gutterView)
-            gutterView.mount(this.context.options.container)
+            let gutterView = this.horizontalGutters.get(key)
 
-            this.attachGutterDrag(gutterView, boundary, {
-                getPos: (e) => e.clientY,
-                dimension: 'height',
-                applyFirst: (view, dy) => {
-                    dy > 0 ? view.rect.shrinkFromBottom(dy) : view.rect.growFromBottom(-dy)
-                },
-                applySecond: (view, dy) => {
-                    dy > 0 ? view.rect.growFromTop(dy) : view.rect.shrinkFromTop(-dy)
-                },
-            })
+            if (!gutterView) {
+                gutterView = new GutterView(
+                    {
+                        config: this.context.options.layout.resize?.gutter as GutterConfig,
+                        direction: 'horizontal',
+                        boundary,
+                    },
+                    new Rect(rectOption),
+                )
+
+                gutterView.mount(container)
+                this.horizontalGutters.set(key, gutterView)
+
+                this.attachGutterDrag(gutterView, boundary, {
+                    getPos: (e) => e.clientY,
+                    dimension: 'height',
+                    applyFirst: (view, dy) => {
+                        dy > 0 ? view.rect.shrinkFromBottom(dy) : view.rect.growFromBottom(-dy)
+                    },
+                    applySecond: (view, dy) => {
+                        dy > 0 ? view.rect.growFromTop(dy) : view.rect.shrinkFromTop(-dy)
+                    },
+                })
+            } else {
+                gutterView.update(new Rect(rectOption))
+            }
+        }
+
+        for (const [key, gutter] of this.horizontalGutters) {
+            if (!activeKeys.has(key)) {
+                gutter.remove()
+                this.horizontalGutters.delete(key)
+            }
         }
     }
 
     private createVerticalGutters() {
+        const container = this.context.options.container
+        const computedRect = this.context.layoutEngine.computedRect
+
+        const activeKeys = new Set<string>()
+
         for (const handle of this.handles) {
             const boundary = this.getBoundary(handle, this.areaTopology.verticalBoundary)
             if (!boundary) continue
 
+            const key = this.getBoundaryKey(boundary)
+            activeKeys.add(key)
+
             let rectOption = { ...this.computeGutterSpan(boundary, 'y') } as RectOption
             const areaName = boundary.first[0]
-            const rect = this.context.layoutEngine.computedRect[areaName]
+            const rect = computedRect[areaName]
+
             rectOption.x = rect.x + rect.width + this.layoutGap / 2 - this.gutter.size / 2
             rectOption.width = this.gutter.size
 
-            const gutterView = new GutterView(
-                {
-                    config: this.context.options.layout.resize?.gutter as GutterConfig,
-                    direction: 'vertical',
-                    boundary,
-                },
-                new Rect(rectOption),
-            )
-            this.verticalGutters.push(gutterView)
-            gutterView.mount(this.context.options.container)
+            let gutterView = this.verticalGutters.get(key)
 
-            this.attachGutterDrag(gutterView, boundary, {
-                getPos: (e) => e.clientX,
-                dimension: 'width',
-                applyFirst: (view, dx) => {
-                    dx > 0 ? view.rect.shrinkFromRight(dx) : view.rect.growFromRight(-dx)
-                },
-                applySecond: (view, dx) => {
-                    dx > 0 ? view.rect.growFromLeft(dx) : view.rect.shrinkFromLeft(-dx)
-                },
-            })
+            if (!gutterView) {
+                gutterView = new GutterView(
+                    {
+                        config: this.context.options.layout.resize?.gutter as GutterConfig,
+                        direction: 'vertical',
+                        boundary,
+                    },
+                    new Rect(rectOption),
+                )
+
+                gutterView.mount(container)
+                this.verticalGutters.set(key, gutterView)
+
+                this.attachGutterDrag(gutterView, boundary, {
+                    getPos: (e) => e.clientX,
+                    dimension: 'width',
+                    applyFirst: (view, dx) => {
+                        dx > 0 ? view.rect.shrinkFromRight(dx) : view.rect.growFromRight(-dx)
+                    },
+                    applySecond: (view, dx) => {
+                        dx > 0 ? view.rect.growFromLeft(dx) : view.rect.shrinkFromLeft(-dx)
+                    },
+                })
+            } else {
+                gutterView.update(new Rect(rectOption))
+            }
+        }
+
+        for (const [key, gutter] of this.verticalGutters) {
+            if (!activeKeys.has(key)) {
+                gutter.remove()
+                this.verticalGutters.delete(key)
+            }
         }
     }
 
@@ -270,30 +312,41 @@ export class ResizeManager {
 
         return axis === 'x' ? { x: min, width: max - min } : { y: min, height: max - min }
     }
-
     private relayoutGutters() {
-        for (const g of this.horizontalGutters) {
-            const boundary = g.boundary
-            const span = this.computeGutterSpan(boundary, 'x') as { x: number; width: number }
-            g.rect.x = span.x
-            g.rect.width = span.width
+        for (const gutter of this.horizontalGutters.values()) {
+            const boundary = gutter.boundary
 
-            const ref = this.context.areaRenderer.getView(boundary.first[0])!.rect
-            g.rect.y = ref.y + ref.height + this.layoutGap / 2 - this.gutter.size / 2
+            const span = this.computeGutterSpan(boundary, 'x') as {
+                x: number
+                width: number
+            }
 
-            g.apply()
+            gutter.rect.x = span.x
+            gutter.rect.width = span.width
+
+            const refRect = this.context.areaRenderer.getView(boundary.first[0])!.rect
+
+            gutter.rect.y = refRect.y + refRect.height + this.layoutGap / 2 - this.gutter.size / 2
+
+            gutter.applyRect()
         }
 
-        for (const g of this.verticalGutters) {
-            const boundary = g.boundary
-            const span = this.computeGutterSpan(boundary, 'y') as { y: number; height: number }
-            g.rect.y = span.y
-            g.rect.height = span.height
+        for (const gutter of this.verticalGutters.values()) {
+            const boundary = gutter.boundary
 
-            const ref = this.context.areaRenderer.getView(boundary.first[0])!.rect
-            g.rect.x = ref.x + ref.width + this.layoutGap / 2 - this.gutter.size / 2
+            const span = this.computeGutterSpan(boundary, 'y') as {
+                y: number
+                height: number
+            }
 
-            g.apply()
+            gutter.rect.y = span.y
+            gutter.rect.height = span.height
+
+            const refRect = this.context.areaRenderer.getView(boundary.first[0])!.rect
+
+            gutter.rect.x = refRect.x + refRect.width + this.layoutGap / 2 - this.gutter.size / 2
+
+            gutter.applyRect()
         }
     }
 
@@ -316,7 +369,7 @@ export class ResizeManager {
         boundarySide.forEach((name) => {
             const view = this.context.areaRenderer.getView(name)!
             resize(view)
-            view.apply()
+            view.applyRect()
         })
     }
 }

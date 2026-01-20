@@ -7,15 +7,21 @@ export class RectView {
 
     constructor(rect: Rect | RectOption) {
         this.elem = document.createElement('div')
+        this.elem.style.position = 'absolute'
+
         if (rect instanceof Rect) this.rect = rect
         else this.rect = new Rect(rect)
 
-        this.elem.style.position = 'absolute'
-
-        this.apply()
+        this.applyRect()
     }
 
-    public apply() {
+    public update(rect: Rect | RectOption) {
+        if (rect instanceof Rect) this.rect = rect
+        else this.rect = new Rect(rect)
+        this.applyRect()
+    }
+
+    public applyRect() {
         this.style({
             left: `${this.rect.x}px`,
             top: `${this.rect.y}px`,
@@ -29,7 +35,9 @@ export class RectView {
     }
 
     public mount(container: HTMLElement) {
-        container.append(this.elem)
+        if (!this.elem.parentElement) {
+            container.appendChild(this.elem)
+        }
     }
 
     public remove() {
