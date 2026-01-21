@@ -26,26 +26,23 @@
     <script type="module">
         import { Rectflow } from './src/index'
 
-        const mainElem = document.getElementById('container')
+        const containerElem = document.getElementById('container')
 
         const rectflow = new Rectflow({
-            container: mainElem,
+            container: containerElem,
             layout: {
-                rows: '60px auto 1fr 200px',
-                columns: '100px 250px auto 120px 70px',
+                rows: '60px auto 60px',
+                columns: '60px 240px auto 60px',
                 gap: 6,
                 areas: [
-                    ['A A A A A'],
-                    ['B E C D I'],
-                    ['B E F D I'],
-                    ['G G G H H']
+                    ['A A A A'],
+                    ['B E C D'],
+                    ['B E F D'],
                 ],
                 resize: {
                     handles: [
                         { between: ['C', 'F'] },
                         { between: ['E', 'C'] },
-                        { between: ['D', 'F'] },
-                        { between: ['G', 'E'] },
                     ],
                     gutter: {
                         size: 4,

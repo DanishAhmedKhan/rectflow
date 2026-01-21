@@ -4,10 +4,9 @@ import { LayoutEngine } from './LayoutEngine'
 import { AreaRenderer } from './AreaRenderer'
 import { ResizeManager } from './ResizeManager'
 import type { RectflowOptions, ResolvedRectflowOptions } from '../types/RectflowOptions'
-import type { Resolved } from '../types/Resolved'
 
 export class RectflowContext {
-    public readonly options: Resolved<ResolvedRectflowOptions>
+    public readonly options: ResolvedRectflowOptions
 
     public areaTopology!: AreaTopology
     public layoutEngine!: LayoutEngine

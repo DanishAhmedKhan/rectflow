@@ -8,6 +8,27 @@ export interface RectflowOptions {
 
 export interface ResolvedRectflowOptions {
     container: HTMLElement
-    layout: LayoutConfig
+    layout: {
+        rows: string
+        columns: string
+        gap: number
+        areas: string[][]
+        resize?: {
+            handles: {
+                between: [string, string]
+                min?: number
+                max?: number
+            }[]
+            gutter?: {
+                size: number
+                delay?: number
+                style?: {
+                    color?: string
+                    hoverColor?: string
+                    activeColor?: string
+                }
+            }
+        }
+    }
     strict: boolean
 }

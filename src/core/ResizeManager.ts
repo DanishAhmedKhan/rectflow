@@ -1,5 +1,4 @@
 import { Rect } from './Rect'
-import { AreaView } from './view/AreaView'
 import { GutterView } from './view/GutterView'
 import type { AreaName, GutterConfig, ResizeHandle } from '../types/ResizeTypes'
 import type { AreaTopology, BoundaryGroup } from './AreaTopology'
@@ -9,7 +8,7 @@ import type { RectOption } from '../types/RectOption'
 export class ResizeManager {
     private areaTopology: AreaTopology
 
-    private handles: ResizeHandle[]
+    private handles!: ResizeHandle[]
     private gutter: GutterConfig
     private layoutGap: number
 
@@ -17,19 +16,33 @@ export class ResizeManager {
     private verticalGutters = new Map<string, GutterView>()
 
     private resizeObserver!: ResizeObserver
-    private activeGutter: GutterView | null = null
 
     constructor(private context: RectflowContext) {
         this.areaTopology = context.areaTopology
         this.gutter = context.options.layout.resize?.gutter! as GutterConfig
         this.layoutGap = context.options.layout.gap ?? 0
-        this.handles = this.context.options.layout.resize?.handles ?? []
+        this.initHandles()
+    }
+
+    private initHandles() {
+        const rawHandles = this.context.options.layout.resize?.handles
+        if (!rawHandles) return
+
+        this.handles = rawHandles.map((h) => {
+            const [a, b] = h.between
+
+            return {
+                between: [a as AreaName, b as AreaName],
+                min: h.min,
+                max: h.max,
+            }
+        })
     }
 
     public apply() {
         if (!this.resizeObserver) this.addContainerResize()
 
-        if (this.context.options.layout.resize && this.context.options.layout.resize.handles.length > 0) {
+        if (this.handles.length > 0) {
             this.createHorizontalGutters()
             this.createVerticalGutters()
         }
@@ -61,7 +74,6 @@ export class ResizeManager {
     }
 
     private createHorizontalGutters() {
-        const container = this.context.options.container
         const computedRect = this.context.layoutEngine.computedRect
 
         const activeKeys = new Set<string>()
@@ -80,37 +92,13 @@ export class ResizeManager {
             rectOption.y = rect.y + rect.height + this.layoutGap / 2 - this.gutter.size / 2
             rectOption.height = this.gutter.size
 
-            let gutterView = this.horizontalGutters.get(key)
-
-            if (!gutterView) {
-                gutterView = new GutterView(
-                    {
-                        config: this.context.options.layout.resize?.gutter as GutterConfig,
-                        direction: 'horizontal',
-                        boundary,
-                    },
-                    new Rect(rectOption),
-                )
-
-                gutterView.mount(container)
-                this.horizontalGutters.set(key, gutterView)
-
-                this.attachGutterDrag(gutterView, boundary, 'horizontal')
-            } else {
-                gutterView.update(new Rect(rectOption))
-            }
+            this.createOrUpdateGutterView(this.horizontalGutters, key, rectOption, 'horizontal', boundary)
         }
 
-        for (const [key, gutter] of this.horizontalGutters) {
-            if (!activeKeys.has(key)) {
-                gutter.remove()
-                this.horizontalGutters.delete(key)
-            }
-        }
+        this.cleanupInactiveGutters(this.horizontalGutters, activeKeys)
     }
 
     private createVerticalGutters() {
-        const container = this.context.options.container
         const computedRect = this.context.layoutEngine.computedRect
 
         const activeKeys = new Set<string>()
@@ -129,31 +117,45 @@ export class ResizeManager {
             rectOption.x = rect.x + rect.width + this.layoutGap / 2 - this.gutter.size / 2
             rectOption.width = this.gutter.size
 
-            let gutterView = this.verticalGutters.get(key)
-
-            if (!gutterView) {
-                gutterView = new GutterView(
-                    {
-                        config: this.context.options.layout.resize?.gutter as GutterConfig,
-                        direction: 'vertical',
-                        boundary,
-                    },
-                    new Rect(rectOption),
-                )
-
-                gutterView.mount(container)
-                this.verticalGutters.set(key, gutterView)
-
-                this.attachGutterDrag(gutterView, boundary, 'vertical')
-            } else {
-                gutterView.update(new Rect(rectOption))
-            }
+            this.createOrUpdateGutterView(this.verticalGutters, key, rectOption, 'vertical', boundary)
         }
 
-        for (const [key, gutter] of this.verticalGutters) {
+        this.cleanupInactiveGutters(this.verticalGutters, activeKeys)
+    }
+
+    private createOrUpdateGutterView(
+        gutters: Map<string, GutterView>,
+        key: string,
+        rectOption: RectOption,
+        direction: 'horizontal' | 'vertical',
+        boundary: BoundaryGroup,
+    ) {
+        let gutterView = gutters.get(key)
+
+        if (!gutterView) {
+            gutterView = new GutterView(
+                {
+                    config: this.context.options.layout.resize?.gutter as GutterConfig,
+                    direction,
+                    boundary,
+                },
+                new Rect(rectOption),
+            )
+
+            gutterView.mount(this.context.options.container)
+            gutters.set(key, gutterView)
+
+            this.attachGutterDrag(gutterView, boundary, direction)
+        } else {
+            gutterView.update(new Rect(rectOption))
+        }
+    }
+
+    private cleanupInactiveGutters(gutters: Map<string, GutterView>, activeKeys: Set<string>) {
+        for (const [key, gutter] of gutters) {
             if (!activeKeys.has(key)) {
                 gutter.remove()
-                this.verticalGutters.delete(key)
+                gutters.delete(key)
             }
         }
     }
@@ -172,7 +174,12 @@ export class ResizeManager {
 
     private attachGutterDrag(gutterView: GutterView, boundary: BoundaryGroup, direction: 'horizontal' | 'vertical') {
         let anchorPos = 0
+        let isHover = false
         let isActive = false
+
+        let hoverTimer: number | null = null
+        let hoverShown = false
+        const delay = this.context.options.layout.resize?.gutter?.delay
 
         const getPos = (e: MouseEvent) => (direction === 'horizontal' ? e.clientY : e.clientX)
 
@@ -201,9 +208,16 @@ export class ResizeManager {
 
         const onMouseDown = (e: MouseEvent) => {
             e.preventDefault()
+
             isActive = true
             anchorPos = getPos(e)
 
+            if (hoverTimer !== null) {
+                clearTimeout(hoverTimer)
+                hoverTimer = null
+            }
+
+            hoverShown = false
             gutterView.setState('active')
 
             document.addEventListener('mousemove', onMouseMove)
@@ -212,12 +226,46 @@ export class ResizeManager {
 
         const onMouseUp = () => {
             isActive = false
-            gutterView.setState('hover')
+
+            if (isHover && hoverShown) {
+                gutterView.setState('hover')
+            } else {
+                gutterView.setState('idle')
+            }
 
             document.removeEventListener('mousemove', onMouseMove)
             document.removeEventListener('mouseup', onMouseUp)
         }
 
+        const onMouseEnter = () => {
+            isHover = true
+            hoverShown = false
+
+            hoverTimer = window.setTimeout(() => {
+                if (!isActive && isHover) {
+                    gutterView.setState('hover')
+                    hoverShown = true
+                }
+            }, delay)
+        }
+
+        const onMouseLeave = () => {
+            isHover = false
+
+            if (hoverTimer !== null) {
+                clearTimeout(hoverTimer)
+                hoverTimer = null
+            }
+
+            hoverShown = false
+
+            if (!isActive) {
+                gutterView.setState('idle')
+            }
+        }
+
+        gutterView.elem.addEventListener('mouseenter', onMouseEnter)
+        gutterView.elem.addEventListener('mouseleave', onMouseLeave)
         gutterView.elem.addEventListener('mousedown', onMouseDown)
     }
 
@@ -231,14 +279,14 @@ export class ResizeManager {
         let max = -Infinity
 
         for (const name of areaNames) {
-            const rect = this.context.layoutEngine.computedRect[name]
+            const { x, y, width, height } = this.context.layoutEngine.computedRect[name]
 
             if (axis === 'x') {
-                min = Math.min(min, rect.x)
-                max = Math.max(max, rect.x + rect.width)
+                min = Math.min(min, x)
+                max = Math.max(max, x + width)
             } else {
-                min = Math.min(min, rect.y)
-                max = Math.max(max, rect.y + rect.height)
+                min = Math.min(min, y)
+                max = Math.max(max, y + height)
             }
         }
 

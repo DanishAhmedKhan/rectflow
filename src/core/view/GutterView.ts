@@ -35,6 +35,7 @@ export class GutterView extends RectView {
 
         elem.style.cursor = this.direction === 'horizontal' ? 'row-resize' : 'col-resize'
         elem.style.transition = 'background 0.2s'
+        elem.style.borderRadius = '3px'
 
         this.applyIdleStyle()
     }
@@ -57,15 +58,15 @@ export class GutterView extends RectView {
     }
 
     private applyIdleStyle() {
-        this.elem.style.background = this.config.style?.color ?? 'transparent'
+        this.elem.style.background = this.config.style?.color!
     }
 
     private applyHoverStyle() {
-        this.elem.style.background = this.config.style?.hoverColor ?? this.config.style?.color ?? 'rgba(0,0,0,0.1)'
+        console.log('hover')
+        this.elem.style.background = this.config.style?.hoverColor ?? 'red'
     }
 
     private applyActiveStyle() {
-        this.elem.style.background =
-            this.config.style?.activeColor ?? this.config.style?.hoverColor ?? 'rgba(0,0,0,0.2)'
+        this.elem.style.background = this.config.style?.activeColor!
     }
 }

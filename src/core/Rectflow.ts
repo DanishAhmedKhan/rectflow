@@ -1,7 +1,7 @@
 import { RectflowContext } from './RectflowContext'
-import { RectflowError } from '../error/RectflowError'
 import type { RectflowOptions } from '../types/RectflowOptions'
 import type { LayoutConfig } from '../types/LayoutConfig'
+import { handleError } from '../helper/handleError'
 
 export class Rectflow {
     private readonly options: RectflowOptions
@@ -24,7 +24,7 @@ export class Rectflow {
             this.initLayout()
             this.applyLayout()
         } catch (err) {
-            this.handleError(err)
+            handleError(err, this.options.strict)
         }
     }
 
@@ -45,21 +45,11 @@ export class Rectflow {
             this.context.layoutEngine.setLayout(layout)
             this.applyLayout()
         } catch (err) {
-            this.handleError(err)
+            handleError(err, this.options.strict)
         }
     }
 
     public getArea(area: string) {
         return this.context.areaRenderer.getAreaElement(area)
-    }
-
-    private handleError(err: unknown) {
-        if (this.options.strict) throw err
-
-        if (err instanceof RectflowError) {
-            console.error(err.message, err.code)
-        } else {
-            console.error('[Rectflow] Unknown error', err)
-        }
     }
 }

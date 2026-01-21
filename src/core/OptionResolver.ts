@@ -44,6 +44,10 @@ export class OptinResolver {
     private normalizeAreas() {
         const { areas } = this.options.layout
 
+        if (!areas) {
+            throw new RectflowError(`layout.areas is required`, ErrorCode.INVALID_LAYOUT)
+        }
+
         if (!Array.isArray(areas)) {
             throw new RectflowError(`layout.areas must be an array of rows (string[][])`, ErrorCode.INVALID_LAYOUT)
         }
@@ -145,6 +149,7 @@ export class OptinResolver {
 
     private validateAreasMatrix() {
         const areas = this.options.layout.areas
+
         const rowsDef = this.options.layout.rows
         const columnsDef = this.options.layout.columns
 
@@ -266,7 +271,13 @@ export class OptinResolver {
             throw new RectflowError(`resize.gutter must be a number or an object`, ErrorCode.INVALID_LAYOUT)
         }
 
-        const { size, style } = gutter as any
+        const { size, delay, style } = gutter as any
+
+        if (delay !== undefined) {
+            if (typeof delay !== 'number' || !Number.isFinite(delay) || delay < 0) {
+                throw new RectflowError(`resize.gutter.delay must be a non-negative number`, ErrorCode.INVALID_LAYOUT)
+            }
+        }
 
         if (size !== undefined) {
             if (typeof size !== 'number' || !Number.isFinite(size) || size < 0) {

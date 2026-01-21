@@ -58,7 +58,7 @@ import { Rectflow } from 'rectflow'
 
 ```css
 #container {
-    width: 100%;
+    width: 100vw;
     height: 100vh;
 }
 ```
@@ -82,7 +82,7 @@ const rectflow = new Rectflow({
             ['B E C D'],
             ['B E F D'],
         ],
-        resize?: {
+        resize: {
             handles: [
                 { between: ['C', 'F'] },
                 { between: ['E', 'C'] },
