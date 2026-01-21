@@ -31,18 +31,21 @@
         const rectflow = new Rectflow({
             container: mainElem,
             layout: {
-                rows: '60px auto 60px',
-                columns: '100px 250px auto 100px',
+                rows: '60px auto 1fr 200px',
+                columns: '100px 250px auto 120px 70px',
                 gap: 6,
                 areas: [
-                    ['A A A A'],
-                    ['B E C D'],
-                    ['B E F D'],
+                    ['A A A A A'],
+                    ['B E C D I'],
+                    ['B E F D I'],
+                    ['G G G H H']
                 ],
                 resize: {
                     handles: [
                         { between: ['C', 'F'] },
                         { between: ['E', 'C'] },
+                        { between: ['D', 'F'] },
+                        { between: ['G', 'E'] },
                     ],
                     gutter: {
                         size: 4,

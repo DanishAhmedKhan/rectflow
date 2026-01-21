@@ -1,18 +1,19 @@
-export function deepMerge<T>(base: T, override?: Partial<T>): T {
+import type { DeepPartial } from '../types/DeepPartial'
+
+export function deepMerge<T>(base: DeepPartial<T>, override?: DeepPartial<T>): DeepPartial<T> {
     if (override == null) {
         return structuredClone(base)
     }
 
-    // If base is not an object, override wins
     if (typeof base !== 'object' || base === null) {
-        return override as T
+        return override
     }
 
     const result: any = structuredClone(base)
 
     for (const key in override) {
         const oVal = override[key]
-        const bVal = (result as any)[key]
+        const bVal = result[key]
 
         if (oVal !== null && typeof oVal === 'object' && !Array.isArray(oVal)) {
             result[key] = deepMerge(bVal, oVal)

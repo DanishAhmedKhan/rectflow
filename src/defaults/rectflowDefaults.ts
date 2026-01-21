@@ -1,15 +1,10 @@
-import type { ResolvedRectflowOptions } from '../types/RectflowOptions'
-import type { Resolved } from '../types/Resolved'
+import type { DeepPartial } from '../types/DeepPartial'
+import type { RectflowOptions } from '../types/RectflowOptions'
 
-export const RECTFLOW_DEFAULTS: Required<Resolved<ResolvedRectflowOptions>> = {
-    container: null as any,
+export const RECTFLOW_DEFAULTS = {
     layout: {
-        rows: '',
-        columns: '',
         gap: 0,
-
         areas: [],
-
         resize: {
             handles: [],
             gutter: {
@@ -20,13 +15,8 @@ export const RECTFLOW_DEFAULTS: Required<Resolved<ResolvedRectflowOptions>> = {
                     hoverColor: 'rgba(0,0,0,0.25)',
                     activeColor: 'rgba(0,0,0,0.45)',
                 },
-                // style: {
-                //     color: 'red',
-                //     hoverColor: 'blue',
-                //     activeColor: 'green',
-                // },
             },
         },
     },
     strict: true,
-}
+} satisfies DeepPartial<RectflowOptions>
