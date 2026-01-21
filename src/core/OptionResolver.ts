@@ -4,7 +4,7 @@ import { ErrorCode } from '../error/ErrorCode'
 import { deepMerge } from '../helper/deepMerge'
 import type { RectflowOptions, ResolvedRectflowOptions } from '../types/RectflowOptions'
 
-export class OptinResolver {
+export class OptionResolver {
     private options!: RectflowOptions
 
     public resolve(options: RectflowOptions): ResolvedRectflowOptions {
@@ -16,7 +16,7 @@ export class OptinResolver {
 
         this.validateContainer()
         this.validateRowsCols()
-        this.validateAreasMatrix()
+        this.validateAreas()
         this.validateResizeHandles()
         this.validateGutter()
 
@@ -147,7 +147,7 @@ export class OptinResolver {
         validateTrack(this.options.layout.columns, 'columns')
     }
 
-    private validateAreasMatrix() {
+    private validateAreas() {
         const areas = this.options.layout.areas
 
         const rowsDef = this.options.layout.rows

@@ -6,7 +6,7 @@ export interface RectflowOptions {
     strict?: boolean
 }
 
-export interface ResolvedRectflowOptions {
+export type ResolvedRectflowOptions = Readonly<{
     container: HTMLElement
     layout: {
         rows: string
@@ -31,4 +31,4 @@ export interface ResolvedRectflowOptions {
         }
     }
     strict: boolean
-}
+}>

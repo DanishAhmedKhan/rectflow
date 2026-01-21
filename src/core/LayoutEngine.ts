@@ -1,7 +1,7 @@
 import { Rect } from './Rect'
 import { Track } from './Track'
 import type { RectflowContext } from './RectflowContext'
-import type { ComputedRect, LayoutConfig } from '../types/LayoutConfig'
+import type { ComputedRect } from '../types/LayoutConfig'
 
 export class LayoutEngine {
     public computedRect: ComputedRect = {}
@@ -14,14 +14,15 @@ export class LayoutEngine {
 
     constructor(private context: RectflowContext) {}
 
-    public setLayout(layout: LayoutConfig) {
-        this.context.options.layout = layout
+    // public setLayout(layout: LayoutConfig) {
+    //     this.context.options
+    //     this.context.options.layout = layout
 
-        this.tracksBuilt = false
-        this.tracksResolved = false
+    //     this.tracksBuilt = false
+    //     this.tracksResolved = false
 
-        this.calculate()
-    }
+    //     this.calculate()
+    // }
 
     public calculate() {
         this.initTracks()

@@ -33,7 +33,7 @@ export interface ContraintsConfig {
 export interface ResizeConfig {
     handles: ResizeHandle[]
     gutter: number | GutterConfig
-    constraints?: ContraintsConfig
+    // constraints?: ContraintsConfig
 }
 
 export interface ResolvedResizeHandle {

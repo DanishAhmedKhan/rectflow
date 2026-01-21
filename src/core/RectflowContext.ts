@@ -1,31 +1,30 @@
-import { OptinResolver } from './OptionResolver'
 import { AreaTopology } from './AreaTopology'
 import { LayoutEngine } from './LayoutEngine'
 import { AreaRenderer } from './AreaRenderer'
 import { ResizeManager } from './ResizeManager'
-import type { RectflowOptions, ResolvedRectflowOptions } from '../types/RectflowOptions'
+import type { RectflowOptions } from '../types/RectflowOptions'
+import { RectflowOptionsStore } from './RectflowOptionsStore'
 
 export class RectflowContext {
-    public readonly options: ResolvedRectflowOptions
+    public readonly optionsStore: RectflowOptionsStore
 
-    public areaTopology!: AreaTopology
-    public layoutEngine!: LayoutEngine
-    public areaRenderer!: AreaRenderer
-    public resizeManager!: ResizeManager
+    public areaTopology: AreaTopology
+    public layoutEngine: LayoutEngine
+    public areaRenderer: AreaRenderer
+    public resizeManager: ResizeManager
 
     public onLayoutChange?: () => void
 
     constructor(rawOptions: RectflowOptions) {
-        const optionResolver = new OptinResolver()
-        this.options = optionResolver.resolve(rawOptions)
+        this.optionsStore = new RectflowOptionsStore(rawOptions)
 
-        this.init()
-    }
-
-    public init() {
         this.areaTopology = new AreaTopology(this)
         this.layoutEngine = new LayoutEngine(this)
         this.areaRenderer = new AreaRenderer(this)
         this.resizeManager = new ResizeManager(this)
+    }
+
+    get options() {
+        return this.optionsStore.options
     }
 }
